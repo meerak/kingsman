@@ -12,7 +12,7 @@ import org.apache.spark.graphx._
 import org.apache.spark.SparkContext._
 
 object RandomWalk {
-
+  /*
   def randomWalkOneVsAll(graph: Graph[VertexProperty, EdgeProperty], patientID: String , numIter: Int = 10, alpha: Double = 0.15): List[String] = {
     //compute ready state probabilities between patient patientID (NOT VERTEX ID) and all other patients and return the top 10 similar patients
      // Initialize the PageRank graph with each edge attribute having
@@ -107,5 +107,5 @@ object RandomWalk {
     //val top_labs = List("test_name1" , "test_name2", "test_name3", "test_name4", "test_name5")
     (top_medications, top_diagnoses, top_labs)
   }
-
+  */
 }
