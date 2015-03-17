@@ -1,9 +1,9 @@
 package edu.gatech.cse8803.graphconstruct
 
 import edu.gatech.cse8803.model._
-//import org.apache.spark.SparkContext._
+import org.apache.spark.SparkContext._
 import org.apache.spark.graphx._
-//import org.apache.spark.rdd.RDD
+import org.apache.spark.rdd.RDD
 import edu.gatech.cse8803.enums._
 
 object GraphLoader {
@@ -13,8 +13,8 @@ object GraphLoader {
     //val sqlContext = new org.apache.spark.sql.SQLContext(patients.sparkContext)
     //val sc = sqlContext.sparkContext
 
-    val snomedVertices: RDD[(VertexId, VertexProperty)] = snomed.map(a=>(a,a))
-    val snomedEdges: RDD[Edge[EdgeProperty]] = ancestors.map(a=>Edge(a.descendent_concept_id, a.ancestor_concept_id, ConceptAncestorEdgeProperty(Relation.ISA)))
+    val snomedVertices: RDD[(VertexId, VertexProperty)] = snomed.map(a=>(a.concept_id.toLong, SnomedProperty(a.concept_id)))
+    val snomedEdges: RDD[Edge[EdgeProperty]] = ancestors.map(a=>Edge(a.descendent_concept_id.toLong, a.ancestor_concept_id.toLong, ConceptAncestorEdgeProperty(Enumerations.ISA)))
     /*val maxPatientID = patients.map(f=>f.patientID).toArray.maxBy(f=>f.toLong).toLong
     
     val labResultsProperty: RDD[VertexProperty] = labResults.map(a=>a.labName).distinct.map(a=>LabResultProperty(a))
@@ -48,6 +48,8 @@ object GraphLoader {
     val diagnosticEdges:RDD[Edge[EdgeProperty]] = maxDiagnostics.join(mapDiagnostics).map(e => Edge(e._2._1.patientID.toLong, e._2._2, PatientDiagnosticEdgeProperty(e._2._1)))
     val diagnosticEdgesReverse:RDD[Edge[EdgeProperty]] = maxDiagnostics.join(mapDiagnostics).map(e => Edge(e._2._2, e._2._1.patientID.toLong, PatientDiagnosticEdgeProperty(e._2._1)))
     val edges = labEdges.union(medicationEdges).union(diagnosticEdges).union(labEdgesReverse).union(medicationEdgesReverse).union(diagnosticEdgesReverse)*/
+    val vertices = snomedVertices
+    val edges = snomedEdges
     val graph: Graph[VertexProperty, EdgeProperty] = Graph(vertices, edges)
     //edges.repartition(1).saveAsTextFile("EdgesBidirectional")
     

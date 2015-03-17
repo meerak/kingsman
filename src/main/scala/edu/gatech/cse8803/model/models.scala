@@ -26,6 +26,8 @@ case class DiagnosticProperty(condition_concept_id: Integer) extends VertexPrope
 
 case class MedicationProperty(drug_concept_id: Integer) extends VertexProperty
 
+case class SnomedProperty(concept_id: Integer) extends VertexProperty
+
 abstract class EdgeProperty
 
 case class SampleEdgeProperty(name: String = "Sample") extends EdgeProperty
@@ -39,5 +41,5 @@ case class PatientDiagnosticEdgeProperty(diagnostic: Diagnostic) extends EdgePro
 
 case class PatientMedicationEdgeProperty(medication: Medication) extends EdgeProperty
 
-case class ConceptAncestorEdgeProperty(relation: Relation) extends EdgeProperty
+case class ConceptAncestorEdgeProperty(relation: Enumerations.Relation) extends EdgeProperty
 

@@ -1,6 +1,6 @@
 package edu.gatech.cse8803.enums
 
-object Relation extends Enumeration {
-  type Relation = Value
-  val ISA = Value("IS-A")
+object Enumerations{
+sealed trait Relation { def r_type: String }
+case object ISA extends Relation { val r_type = "IS-A" }
 }
