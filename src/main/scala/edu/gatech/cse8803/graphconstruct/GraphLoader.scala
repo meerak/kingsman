@@ -5,21 +5,20 @@
 package edu.gatech.cse8803.graphconstruct
 
 import edu.gatech.cse8803.model._
-//import org.apache.spark.SparkContext._
+import org.apache.spark.SparkContext._
 import org.apache.spark.graphx._
-//import org.apache.spark.rdd.RDD
-import edu.gatech.cse8803.enums._
+import org.apache.spark.rdd.RDD
 
 object GraphLoader {
-  def load(patients: RDD[PatientProperty], labResults: RDD[LabResult],
-           medications: RDD[Medication], diagnostics: RDD[Diagnostic], snomed:RDD[Snomed], ancestors:RDD[ConceptAncestor]): Graph[VertexProperty, EdgeProperty] = {
+    /*
+  def load(patients: RDD[PatientProperty], labResults: RDD[Observation],
+           medications: RDD[Medication], diagnostics: RDD[Diagnostic]): Graph[VertexProperty, EdgeProperty] = {
 
-    //val sqlContext = new org.apache.spark.sql.SQLContext(patients.sparkContext)
-    //val sc = sqlContext.sparkContext
+    val sqlContext = new org.apache.spark.sql.SQLContext(patients.sparkContext)
+    val sc = sqlContext.sparkContext
 
-    val snomedVertices: RDD[(VertexId, VertexProperty)] = snomed.map(a=>(a,a))
-    val snomedEdges: RDD[Edge[EdgeProperty]] = ancestors.map(a=>Edge(a.descendent_concept_id, a.ancestor_concept_id, ConceptAncestorEdgeProperty(Relation.ISA)))
-    /*val maxPatientID = patients.map(f=>f.patientID).toArray.maxBy(f=>f.toLong).toLong
+    val patientVertices: RDD[(VertexId, VertexProperty)] = patients.map(a=>(a.patientID.toLong, a))
+    val maxPatientID = patients.map(f=>f.patientID).toArray.maxBy(f=>f.toLong).toLong
     
     val labResultsProperty: RDD[VertexProperty] = labResults.map(a=>a.labName).distinct.map(a=>LabResultProperty(a))
     val labCount = labResultsProperty.count.toLong
@@ -55,11 +54,13 @@ object GraphLoader {
     val diagnosticEdges:RDD[Edge[EdgeProperty]] = maxDiagnostics.join(mapDiagnostics).map(e => Edge(e._2._1.patientID.toLong, e._2._2, PatientDiagnosticEdgeProperty(e._2._1)))
     val diagnosticEdgesReverse:RDD[Edge[EdgeProperty]] = maxDiagnostics.join(mapDiagnostics).map(e => Edge(e._2._2, e._2._1.patientID.toLong, PatientDiagnosticEdgeProperty(e._2._1)))
 
-    val edges = labEdges.union(medicationEdges).union(diagnosticEdges).union(labEdgesReverse).union(medicationEdgesReverse).union(diagnosticEdgesReverse)*/
+    val edges = labEdges.union(medicationEdges).union(diagnosticEdges).union(labEdgesReverse).union(medicationEdgesReverse).union(diagnosticEdgesReverse)
     val graph: Graph[VertexProperty, EdgeProperty] = Graph(vertices, edges)
     //edges.repartition(1).saveAsTextFile("EdgesBidirectional")
     
     graph
+
+    null
   }
 
   def runPageRank(graph:  Graph[VertexProperty, EdgeProperty] ): List[(String, Double)] ={
@@ -83,6 +84,8 @@ object GraphLoader {
 
     val p  = top.map(t=> (t._2._1 , t._2._2)).toList
     p
+    null
   }
+  */
 }
 
