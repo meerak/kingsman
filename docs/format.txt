@@ -1,0 +1,91 @@
+PERSON
+ person_id              | integer               | not null
+ gender_concept_id      | integer               | not null
+ year_of_birth          | integer               | not null
+ month_of_birth         | integer               |
+ day_of_birth           | integer               |
+ race_concept_id        | integer               |
+ ethnicity_concept_id   | integer               |
+ location_id            | integer               |
+ provider_id            | integer               |
+ care_site_id           | integer               |
+ person_source_value    | character varying(50) |
+ gender_source_value    | character varying(50) |
+ race_source_value      | character varying(50) |
+ ethnicity_source_value | character varying(50) |
+
+DEATH
+ person_id                   | integer               | not null
+ death_date                  | date                  | not null
+ death_type_concept_id       | integer               | not null
+ cause_of_death_concept_id   | integer               |
+ cause_of_death_source_value | character varying(50) |
+
+CONDITION_OCCURRENCE
+ condition_occurrence_id   | integer               | not null default nextval('u'::regclass)
+ person_id                 | integer               | not null
+ condition_concept_id      | integer               | not null
+ condition_start_date      | date                  | not null
+ condition_end_date        | date                  |
+ condition_type_concept_id | integer               |
+ stop_reason               | character varying(20) |
+ associated_provider_id    | integer               |
+ visit_occurrence_id       | integer               |
+ condition_source_value    | character varying(50) |
+	
+DRUG_EXPOSURE
+ drug_exposure_id              | integer                | not null default nextval('s1'::regclass)
+ person_id                     | integer                | not null
+ drug_concept_id               | integer                | not null
+ drug_exposure_start_date      | date                   | not null
+ drug_exposure_end_date        | date                   |
+ drug_type_concept_id          | integer                | not null
+ stop_reason                   | character varying(20)  |
+ refills                       | integer                |
+ quantity                      | integer                |
+ days_supply                   | integer                |
+ sig                           | character varying(500) |
+ prescribing_provider_id       | integer                |
+ visit_occurrence_id           | integer                |
+ relevant_condition_concept_id | integer                |
+ drug_source_value             | character varying(50)  |
+
+VISIT_OCCURRENCE
+ visit_occurrence_id           | integer               | not null
+ person_id                     | integer               | not null
+ visit_start_date              | date                  | not null
+ visit_end_date                | date                  | not null
+ place_of_service_concept_id   | integer               |
+ care_site_id                  | integer               |
+ place_of_service_source_value | character varying(50) |
+
+CONCEPT VOCABULARIES
+ concept_id       | integer                | not null
+ concept_name     | character varying(256) | not null
+ concept_level    | integer                | not null
+ concept_class    | character varying(60)  | not null
+ vocabulary_id    | integer                | not null
+ concept_code     | character varying(40)  | not null
+ valid_start_date | date                   | not null
+ valid_end_date   | date                   | not null default '2099-12-31'::date
+ invalid_reason   | character(1)           |
+
+OBSEVATION
+ observation_id                | integer               | not null default nextval('obs'::regclass)
+ person_id                     | integer               | not null
+ observation_concept_id        | integer               | not null
+ observation_date              | date                  | not null
+ observation_time              | date                  |
+ value_as_number               | numeric(14,3)         |
+ value_as_string               | character varying(60) |
+ value_as_concept_id           | integer               |
+ unit_concept_id               | integer               |
+ range_low                     | numeric(14,3)         |
+ range_high                    | numeric(14,3)         |
+ observation_type_concept_id   | integer               | not null
+ associated_provider_id        | integer               | not null
+ visit_occurrence_id           | integer               |
+ relevant_condition_concept_id | integer               |
+ observation_source_value      | character varying(50) |
+ units_source_value            | character varying(50) |
+
