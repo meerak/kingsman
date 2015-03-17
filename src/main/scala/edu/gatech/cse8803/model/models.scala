@@ -30,3 +30,5 @@ case class PatientDiagnosticEdgeProperty(diagnostic: Diagnostic) extends EdgePro
 
 case class PatientMedicationEdgeProperty(medication: Medication) extends EdgeProperty
 
+case class conceptAncestorEdgeProperty(relation: String = "IS-A") extends EdgeProperty
+
