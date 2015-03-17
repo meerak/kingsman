@@ -12,7 +12,7 @@ case class Medication(drug_exposure_id: Integer, person_id: Integer, drug_concep
 
 abstract class VertexProperty
 
-case class PatientProperty(patientID: String, sex: String, dob: String, dod: String) extends VertexProperty
+case class PatientProperty(person_id: Integer, gender_concept_id: Integer, year_of_birth: Integer, month_of_birth: Integer, day_of_birth: Integer, race_concept_id: Integer, ethnicity_concept_id: Integer, location_id: Integer, provider_id: Integer, care_site_id: Integer, person_source_value: String, gender_source_value: String, race_source_value: String, ethnicity_source_value: String) extends VertexProperty
 
 case class LabResultProperty(testName: String) extends VertexProperty
 
