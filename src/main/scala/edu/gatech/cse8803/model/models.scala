@@ -2,7 +2,7 @@ package edu.gatech.cse8803.model
 
 import edu.gatech.cse8803.enums._
 
-case class Observation(person_id:Integer ,observation_concept_id: Integer, observation_date: String, 
+case class Observation(observation_id: Integer, person_id:Integer ,observation_concept_id: Integer, observation_date: String, 
     observation_time: String, value_as_number: Float, value_as_string:String, value_as_concept_id:Integer,
     unit_concept_id: Integer, range_low: Float, range_high: Float, observation_type_concept_id: Integer,
     associated_provider_id: Int, visit_occurrence_id: Integer, relevant_condition_concept_id:Integer, 
