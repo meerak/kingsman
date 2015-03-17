@@ -1,4 +1,4 @@
-name := "cse8803_hw3_template"
+name := "cse8803_project_template"
 
 version := "1.0"
 

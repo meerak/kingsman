@@ -14,9 +14,9 @@ case class PatientProperty(person_id: Integer, gender_concept_id: Integer, year_
 
 case class ObservationProperty(observation_concept_id: Int) extends VertexProperty
 
-case class DiagnosticProperty(icd9code: String) extends VertexProperty
+case class DiagnosticProperty(condition_concept_id: Integer) extends VertexProperty
 
-case class MedicationProperty(medicine: String) extends VertexProperty
+case class MedicationProperty(drug_concept_id: Integer) extends VertexProperty
 
 abstract class EdgeProperty
 
