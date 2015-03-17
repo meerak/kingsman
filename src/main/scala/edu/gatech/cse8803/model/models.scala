@@ -6,9 +6,9 @@ package edu.gatech.cse8803.model
 
 case class LabResult(patientID: String, date: Long, labName: String, loincCode: String, value: String)
 
-case class Diagnostic(patientID: String, date: Long, icd9code: String, sequence: Int)
+case class Diagnostic(condition_occurrence_id: Integer, person_id: Integer, condition_concept_id: Integer, condition_start_date: String, condition_end_date: String, condition_type_concept_id: Integer, stop_reason: String, associated_provider_id: Integer, visit_occurrence_id: Integer, condition_source_value: String)
 
-case class Medication(patientID: String, date: Long, medicine: String)
+case class Medication(drug_exposure_id: Integer, person_id: Integer, drug_concept_id: Integer, drug_exposure_start_date: String, drug_exposure_end_date: String, drug_type_concept_id: Integer, stop_reason: String, refills: Integer, quantity: Integer, days_supply: Integer, sig: String, prescribing_provider_id: Integer, visit_occurrence_id: Integer, relevant_condition_concept_id: Integer, drug_source_value: String)
 
 abstract class VertexProperty
 
