@@ -70,3 +70,22 @@ CONCEPT VOCABULARIES
  valid_end_date   | date                   | not null default '2099-12-31'::date
  invalid_reason   | character(1)           |
 
+OBSEVATION
+ observation_id                | integer               | not null default nextval('obs'::regclass)
+ person_id                     | integer               | not null
+ observation_concept_id        | integer               | not null
+ observation_date              | date                  | not null
+ observation_time              | date                  |
+ value_as_number               | numeric(14,3)         |
+ value_as_string               | character varying(60) |
+ value_as_concept_id           | integer               |
+ unit_concept_id               | integer               |
+ range_low                     | numeric(14,3)         |
+ range_high                    | numeric(14,3)         |
+ observation_type_concept_id   | integer               | not null
+ associated_provider_id        | integer               | not null
+ visit_occurrence_id           | integer               |
+ relevant_condition_concept_id | integer               |
+ observation_source_value      | character varying(50) |
+ units_source_value            | character varying(50) |
+
