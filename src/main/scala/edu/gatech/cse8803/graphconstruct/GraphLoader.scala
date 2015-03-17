@@ -11,8 +11,8 @@ import org.apache.spark.graphx._
 import edu.gatech.cse8803.enums._
 
 object GraphLoader {
-  def load(snomed:RDD[Int], ancestors:RDD[Concept_Ancestor], patients: RDD[PatientProperty], labResults: RDD[LabResult],
-           medications: RDD[Medication], diagnostics: RDD[Diagnostic]): Graph[VertexProperty, EdgeProperty] = {
+  def load(patients: RDD[PatientProperty], labResults: RDD[LabResult],
+           medications: RDD[Medication], diagnostics: RDD[Diagnostic], snomed:RDD[Snomed], ancestors:RDD[ConceptAncestor]): Graph[VertexProperty, EdgeProperty] = {
 
     //val sqlContext = new org.apache.spark.sql.SQLContext(patients.sparkContext)
     //val sc = sqlContext.sparkContext

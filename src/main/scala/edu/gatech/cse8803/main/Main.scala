@@ -21,11 +21,12 @@ object Main {
     val sqlContext = new SQLContext(sc)
 
     /** initialize loading of data */
-    val (patient, medication, labResult, diagnostic) = loadRddRawData(sqlContext)
+    val (patient, medication, labResult, diagnostic, snomed, ancestors) = loadRddRawData(sqlContext)
 
     //build the graph
-    val graph = GraphLoader.load( patient, labResult, medication, diagnostic )
+    val graph = GraphLoader.load( patient, labResult, medication, diagnostic, snomed, ancestors)
 
+    /*
     //compute pagerank
     testPageRank(graph)
     
@@ -36,7 +37,7 @@ object Main {
     testJaccard(graph, 0.5, 0.3, 0.2)
 
     //Random walk similarity
-    testRandomWalk(graph)
+    testRandomWalk(graph)*/
   }
 
   def testJaccard( graphInput:  Graph[VertexProperty, EdgeProperty], wd: Double, wm: Double, wl: Double ) = {
@@ -80,7 +81,7 @@ object Main {
     p.foreach(println)
   }
 
-  def loadRddRawData(sqlContext: SQLContext): (RDD[PatientProperty], RDD[Medication], RDD[LabResult], RDD[Diagnostic]) = {
+  def loadRddRawData(sqlContext: SQLContext): (RDD[PatientProperty], RDD[Medication], RDD[LabResult], RDD[Diagnostic], RDD[Snomed], RDD[ConceptAncestor]) = {
 
     // split / clean data
     val patient_data = CSVUtils.loadCSVAsTable(sqlContext, "data/person.csv", "patient")
@@ -88,11 +89,11 @@ object Main {
     println("Patients", patients.count)
 
     val diagnostics_data = CSVUtils.loadCSVAsTable(sqlContext, "data/condition_occurrence.csv", "diagnostic")
-    val diagnostics = diagnostics_data.map(a => Diagnostic(a(0).toInt, a(1).toInt, a(2).toInt, a(3).toString, a(4).toString, a(5).toInt, a(6).toString, a(7).toInt, a(8).toInt, a(9).toString)
+    val diagnostics = diagnostics_data.map(a => Diagnostic(a(0).toInt, a(1).toInt, a(2).toInt, a(3).toString, a(4).toString, a(5).toInt, a(6).toString, a(7).toInt, a(8).toInt, a(9).toString))
     println("Diagnostics", diagnostics.count)
     
     val lab_data = CSVUtils.loadCSVAsTable(sqlContext, "data/observation.csv", "lab")
-    val labResults = lab_data.map(l => LabResult(l(0).toInt, l(1).toInt, l(2).toInt, l(3).toString, l(4).toString, l(5).toFloat, l(6).toString, l(7).toInt, l(8).toInt, l(9).toFloat, l(10).toFloat, l(11).toInt, l(12).toInt, l(13).toInt, l(14).toInt, l(15).toString, l(16).toString)
+    val labResults = lab_data.map(l => LabResult(l(0).toInt, l(1).toInt, l(2).toInt, l(3).toString, l(4).toString, l(5).toFloat, l(6).toString, l(7).toInt, l(8).toInt, l(9).toFloat, l(10).toFloat, l(11).toInt, l(12).toInt, l(13).toInt, l(14).toInt, l(15).toString, l(16).toString))
     println("labResults", labResults.count)
 
     val med_data = CSVUtils.loadCSVAsTable(sqlContext, "data/drug_exposure.csv", "medication")
@@ -108,10 +109,14 @@ object Main {
     println("loinc", loinc.count)
 
     val snomed_data = CSVUtils.loadCSVAsTable(sqlContext, "data/snomed.csv", "snomed")
-    val snomed = snomed_data.map(s => (s(0).toInt, s(1).toString, s(5).toString))
+    val snomed = snomed_data.map(s => Snomed(s(0).toInt, s(1).toString, s(5).toString))
     println("snomed", snomed.count)
 
-    (patients, medication, labResults, diagnostics)
+    val snomed_ancestor_data = CSVUtils.loadCSVAsTable(sqlContext, "data/ancestors.csv", "ancestors")
+    val ancestors = snomed_ancestor_data.map(s => ConceptAncestor(s(0).toInt, s(1).toInt, s(2).toInt, s(3).toInt))
+    //println("ancestors", ancestors.count)
+
+    (patients, medication, labResults, diagnostics, snomed, ancestors)
   }
 
   def createContext(appName: String, masterUrl: String): SparkContext = {

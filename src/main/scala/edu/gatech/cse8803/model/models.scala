@@ -2,15 +2,19 @@ package edu.gatech.cse8803.model
 
 import edu.gatech.cse8803.enums._
 
-case class Observation(person_id:Integer observation_concept_id: Integer observation_date: String, observation_time: String, vale_as_number: Float, 
-    value_as_string:String, value_as_concept_id:Integer unit_concept_id: Integer range_low: Float, range_high: Float, observation_type_concept_id: Integer associated_provider_id: Int
-    visit_occurrence_id: Integer relevant_condition_concept_id:Integer observation_source_value:String, units_source_value: String)
+case class Observation(person_id:Integer ,observation_concept_id: Integer, observation_date: String, 
+    observation_time: String, value_as_number: Float, value_as_string:String, value_as_concept_id:Integer,
+    unit_concept_id: Integer, range_low: Float, range_high: Float, observation_type_concept_id: Integer,
+    associated_provider_id: Int, visit_occurrence_id: Integer, relevant_condition_concept_id:Integer, 
+    observation_source_value:String, units_source_value: String)
 
 case class Diagnostic(condition_occurrence_id: Integer, person_id: Integer, condition_concept_id: Integer, condition_start_date: String, condition_end_date: String, condition_type_concept_id: Integer, stop_reason: String, associated_provider_id: Integer, visit_occurrence_id: Integer, condition_source_value: String)
 
 case class Medication(drug_exposure_id: Integer, person_id: Integer, drug_concept_id: Integer, drug_exposure_start_date: String, drug_exposure_end_date: String, drug_type_concept_id: Integer, stop_reason: String, refills: Integer, quantity: Integer, days_supply: Integer, sig: String, prescribing_provider_id: Integer, visit_occurrence_id: Integer, relevant_condition_concept_id: Integer, drug_source_value: String)
 
-case class Concept_Ancestor(ancestor_concept_id:Integer descendent_concept_id:Integer, mav_levels_of_separation:Integer, min_levels_of_separation:Integer)
+case class ConceptAncestor(ancestor_concept_id:Integer, descendent_concept_id:Integer, max_levels_of_separation:Integer, min_levels_of_separation:Integer)
+
+case class Snomed(concept_id:Integer, conecpt_name:String, concept_code:String)
 
 abstract class VertexProperty
 
@@ -26,9 +30,10 @@ abstract class EdgeProperty
 
 case class SampleEdgeProperty(name: String = "Sample") extends EdgeProperty
 
-case class PatientObservationProperty(observation_date: String, observation_time: String, vale_as_number: Float, 
-    value_as_string:String, value_as_concept_id:Integer unit_concept_id: Integer range_low: Float, range_high: Float, observation_type_concept_id: Integer associated_provider_id: Int
-    visit_occurrence_id: Integer relevant_condition_concept_id:Integer observation_source_value:String, units_source_value: String) extends EdgeProperty
+case class PatientObservationProperty(observation_date: String, observation_time: String, value_as_number: Float, 
+    value_as_string:String, value_as_concept_id:Integer, unit_concept_id: Integer, range_low: Float, range_high: Float, 
+    observation_type_concept_id: Integer, associated_provider_id: Integer,
+    visit_occurrence_id: Integer, relevant_condition_concept_id:Integer, observation_source_value:String, units_source_value: String) extends EdgeProperty
 
 case class PatientDiagnosticEdgeProperty(diagnostic: Diagnostic) extends EdgeProperty
 
