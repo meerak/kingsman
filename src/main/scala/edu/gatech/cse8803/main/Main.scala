@@ -1,7 +1,3 @@
-/**
- * @author Hang Su <hangsu@gatech.edu>.
- */
-
 package edu.gatech.cse8803.main
 
 import java.text.SimpleDateFormat
@@ -98,7 +94,7 @@ object Main {
     println("Diagnostics", diagnostics.count)
     
     val lab_data = CSVUtils.loadCSVAsTable(sqlContext, "data/observation.csv", "lab")
-    val labResults = lab_data.map(l => Observation(l(0).toString.toInt, l(1).toString.toInt, l(2).toString.toInt, l(3).toString, l(4).toString, l(5).toFloat, l(6).toString, l(7).toString.toInt, l(8).toString.toInt, l(9).toFloat, l(10).toFloat, l(11).toString.toInt, l(12).toString.toInt, l(13).toString.toInt, l(14).toString.toInt, l(15).toString, l(16).toString))
+    val labResults = lab_data.map(l => Observation(l(0).toString.toInt, l(1).toString.toInt, l(2).toString.toInt, l(3).toString, l(4).toString, l(5).toString.toFloat, l(6).toString, l(7).toString.toInt, l(8).toString.toInt, l(9).toString.toFloat, l(10).toString.toFloat, l(11).toString.toInt, l(12).toString.toInt, l(13).toString.toInt, l(14).toString.toInt, l(15).toString, l(16).toString))
     println("labResults", labResults.count)
 
     val med_data = CSVUtils.loadCSVAsTable(sqlContext, "data/drug_exposure.csv", "medication")
