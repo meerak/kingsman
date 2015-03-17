@@ -1,7 +1,3 @@
-/**
- * @author Hang Su <hangsu@gatech.edu>.
- */
-
 package edu.gatech.cse8803.main
 
 import java.text.SimpleDateFormat
@@ -87,21 +83,33 @@ object Main {
   def loadRddRawData(sqlContext: SQLContext): (RDD[PatientProperty], RDD[Medication], RDD[LabResult], RDD[Diagnostic]) = {
 
     // split / clean data
-    val patient_data = CSVUtils.loadCSVAsTable(sqlContext, "data/PATIENT.csv", "patient")
+    val patient_data = CSVUtils.loadCSVAsTable(sqlContext, "data/person.csv", "patient")
     val patients = patient_data.map(p=> PatientProperty(p(0).toString, p(1).toString, p(2).toString, p(3).toString))
-    //println("Patients", patients.count)
+    println("Patients", patients.count)
 
-    val diagnostics_data = CSVUtils.loadCSVAsTable(sqlContext, "data/DIAGNOSTIC.csv", "diagnostic")
-    val diagnostics = diagnostics_data.map(a => Diagnostic(a(0).toString, a(1).toString.toLong, a(3).toString, a(4).toString.toInt))
-    //println("Diagnostics", diagnostics.count)
+    val diagnostics_data = CSVUtils.loadCSVAsTable(sqlContext, "data/condition_occurrence.csv", "diagnostic")
+    val diagnostics = diagnostics_data.map(a => Diagnostic(a(0).toInt, a(1).toInt, a(2).toInt, a(3).toString, a(4).toString, a(5).toInt, a(6).toString, a(7).toInt, a(8).toInt, a(9).toString)
+    println("Diagnostics", diagnostics.count)
     
-    val lab_data = CSVUtils.loadCSVAsTable(sqlContext, "data/LAB.csv", "lab")
-    val labResults = lab_data.map(a => LabResult(a(0).toString, a(1).toString.toLong, a(2).toString, a(3).toString, a(4).toString))
-    //println("labResults", labResults.count)
+    val lab_data = CSVUtils.loadCSVAsTable(sqlContext, "data/observation.csv", "lab")
+    val labResults = lab_data.map(l => LabResult(l(0).toInt, l(1).toInt, l(2).toInt, l(3).toString, l(4).toString, l(5).toFloat, l(6).toString, l(7).toInt, l(8).toInt, l(9).toFloat, l(10).toFloat, l(11).toInt, l(12).toInt, l(13).toInt, l(14).toInt, l(15).toString, l(16).toString)
+    println("labResults", labResults.count)
 
-    val med_data = CSVUtils.loadCSVAsTable(sqlContext, "data/MEDICATION.csv", "medication")
-    val medication = med_data.map(p => Medication(p(0).toString, p(1).toString.toLong, p(2).toString))
-    //println("medication", medication.count)
+    val med_data = CSVUtils.loadCSVAsTable(sqlContext, "data/drug_exposure.csv", "medication")
+    val medication = med_data.map(p => Medication(p(0).toInt, p(1).toInt, p(2).toInt, p(3).toString, p(4).toString, p(5).toInt, p(6).toString, p(7).toInt, p(8).toInt, p(9).toInt, p(10).toString, p(11).toInt, p(12).toInt, p(13).toInt, p(14).toString))
+    println("medication", medication.count)
+
+    val rxnorm_data = CSVUtils.loadCSVAsTable(sqlContext, "data/rxnorm.csv", "rxnorm")
+    val rxnorm = rxnorm_data.map(r => (r(0).toInt, r(1).toString, r(5).toString))
+    println("rxnorm", rxnorm.count)
+
+    val loinc_data = CSVUtils.loadCSVAsTable(sqlContext, "data/loinc.csv", "loinc")
+    val loinc = loinc_data.map(l => (l(0).toInt, l(1).toString, l(5).toString))
+    println("loinc", loinc.count)
+
+    val snomed_data = CSVUtils.loadCSVAsTable(sqlContext, "data/snomed.csv", "snomed")
+    val snomed = snomed_data.map(s => (s(0).toInt, s(1).toString, s(5).toString))
+    println("snomed", snomed.count)
 
     (patients, medication, labResults, diagnostics)
   }
