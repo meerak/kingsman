@@ -89,3 +89,9 @@ OBSEVATION
  observation_source_value      | character varying(50) |
  units_source_value            | character varying(50) |
 
+CONCEPT_ANCESTOR
+ ancestor_concept_id      | integer | not null
+ descendant_concept_id    | integer | not null
+ max_levels_of_separation | integer |
+ min_levels_of_separation | integer |
+
