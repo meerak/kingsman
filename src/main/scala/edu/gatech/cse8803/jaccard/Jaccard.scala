@@ -13,7 +13,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.SparkContext._
 
 object Jaccard {
-
+    /*
   def jaccardSimilarityOneVsAll(graph: Graph[VertexProperty, EdgeProperty], patientID: String, wd: Double, wm: Double, wl: Double): List[String] = {
     //compute ready state probabilities between patient patientID (NOT VERTEX ID) and all other patients and return the top 10 similar patients
 
@@ -93,5 +93,5 @@ object Jaccard {
 
     (top_medications, top_diagnoses, top_labs)
   }
-
+    */
 }
