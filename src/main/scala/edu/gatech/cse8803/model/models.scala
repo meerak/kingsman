@@ -12,7 +12,7 @@ case class Diagnostic(condition_occurrence_id: Integer, person_id: Integer, cond
 
 case class Medication(drug_exposure_id: Integer, person_id: Integer, drug_concept_id: Integer, drug_exposure_start_date: String, drug_exposure_end_date: String, drug_type_concept_id: Integer, stop_reason: String, refills: Integer, quantity: Integer, days_supply: Integer, sig: String, prescribing_provider_id: Integer, visit_occurrence_id: Integer, relevant_condition_concept_id: Integer, drug_source_value: String)
 
-case class ConceptAncestor(ancestor_concept_id:Integer, descendent_concept_id:Integer, max_levels_of_separation:Integer, min_levels_of_separation:Integer)
+case class ConceptAncestor(ancestor_concept_id:Integer, descendent_concept_id:Integer)
 
 case class Snomed(concept_id:Integer, conecpt_name:String, concept_code:String)
 

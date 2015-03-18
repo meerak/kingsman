@@ -85,7 +85,7 @@ object Main {
   def loadRddRawData(sqlContext: SQLContext): (RDD[PatientProperty], RDD[Medication], RDD[Observation], RDD[Diagnostic]) = {
 
     // split / clean data
-    val patient_data = CSVUtils.loadCSVAsTable(sqlContext, "data/person.csv", "patient")
+    /*val patient_data = CSVUtils.loadCSVAsTable(sqlContext, "data/person.csv", "patient")
     val patients = patient_data.map(p=> PatientProperty(p(0).toString.toInt, p(1).toString.toInt, p(2).toString.toInt, p(3).toString.toInt, p(4).toString.toInt, p(5).toString.toInt, p(6).toString.toInt, p(7).toString.toInt, p(8).toString.toInt, p(9).toString.toInt, p(10).toString, p(11).toString, p(12).toString, p(13).toString))
     println("Patients", patients.count)
 
@@ -107,13 +107,18 @@ object Main {
 
     val loinc_data = CSVUtils.loadCSVAsTable(sqlContext, "data/loinc.csv", "loinc")
     val loinc = loinc_data.map(l => (l(0).toString.toInt, l(1).toString, l(5).toString))
-    println("loinc", loinc.count)
+    println("loinc", loinc.count)*/
 
     val snomed_data = CSVUtils.loadCSVAsTable(sqlContext, "data/snomed.csv", "snomed")
-    val snomed = snomed_data.map(s => (s(0).toString.toInt, s(1).toString, s(5).toString))
+    val snomed = snomed_data.map(s => Snomed(s(0).toString.toInt, s(1).toString, s(5).toString))
     println("snomed", snomed.count)
 
-    (patients, medication, labResults, diagnostics)
+    val ancestor_data = CSVUtils.loadCSVAsTable(sqlContext, "data/ancestors.csv", "ancestors")
+    val ancestors = ancestor_data.map(s => ConceptAncestor(s(0).toString.toInt, s(1).toString.toInt))
+    println("ancestors", ancestors.count)
+
+    (null, null, null, null)
+    //(patients, medication, labResults, diagnostics)
   }
 
   def createContext(appName: String, masterUrl: String): SparkContext = {
