@@ -84,7 +84,7 @@ object Main {
   }
     */
     
-    def toInt(s: String):Int = 
+ def toInt(s: String):Int = 
   {
     try 
     {
@@ -126,15 +126,14 @@ object Main {
     val med_data = CSVUtils.loadCSVAsTable(sqlContext, "data/drug_exposure.csv", "medication")
     val medication = med_data.map(p => Medication(toInt(p(0).toString), toInt(p(1).toString), toInt(p(2).toString), p(3).toString, p(4).toString, toInt(p(5).toString), p(6).toString, toInt(p(7).toString), toInt(p(8).toString), toInt(p(9).toString), p(10).toString, toInt(p(11).toString), toInt(p(12).toString),toInt(p(13).toString), p(14).toString))
     //println("medication", medication.count)
-    /*
+
     val rxnorm_data = CSVUtils.loadCSVAsTable(sqlContext, "data/rxnorm.csv", "rxnorm")
     val rxnorm = rxnorm_data.map(r => (r(0).toString.toInt, r(1).toString, r(5).toString))
-    println("rxnorm", rxnorm.count)
+    //println("rxnorm", rxnorm.count)
 
     val loinc_data = CSVUtils.loadCSVAsTable(sqlContext, "data/loinc.csv", "loinc")
     val loinc = loinc_data.map(l => (l(0).toString.toInt, l(1).toString, l(5).toString))
-    println("loinc", loinc.count)
-    */
+    //println("loinc", loinc.count)
 
     val snomed_data = CSVUtils.loadCSVAsTable(sqlContext, "data/snomed.csv", "snomed")
     val snomed = snomed_data.map(s => Snomed(s(0).toString.toInt, s(1).toString, s(5).toString))
@@ -145,7 +144,6 @@ object Main {
     //println("ancestors", ancestors.count)
 
     (patients, medication, labResults, diagnostics, snomed,ancestors)
-    //(patients, medication, labResults, diagnostics)
   }
 
   def createContext(appName: String, masterUrl: String): SparkContext = {
