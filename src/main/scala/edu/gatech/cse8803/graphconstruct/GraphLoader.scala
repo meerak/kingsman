@@ -20,17 +20,19 @@ object GraphLoader {
     val rxnormEdges: RDD[Edge[EdgeProperty]] = rxnorm_ancestors.map(a=>Edge(a.descendent_concept_id.toLong, a.ancestor_concept_id.toLong, ConceptAncestorEdgeProperty(Enumerations.ISA)))
 
     val patlabEdges: RDD[Edge[EdgeProperty]] = labResults.map(x => Edge((-x.person_id).toLong, x.observation_concept_id.toLong,  PatientObservationProperty(x))) 
+    val labpatEdges: RDD[Edge[EdgeProperty]] = labResults.map(x => Edge(x.observation_concept_id.toLong, (-x.person_id).toLong, PatientObservationProperty(x))) 
 
     val patdiagEdges: RDD[Edge[EdgeProperty]] = diagnostics.map(x => Edge((-x.person_id).toLong, x.condition_concept_id.toLong,  PatientDiagnosticEdgeProperty(x)))
+    val diagpatEdges: RDD[Edge[EdgeProperty]] = diagnostics.map(x => Edge(x.condition_concept_id.toLong, (-x.person_id).toLong, PatientDiagnosticEdgeProperty(x)))
 
     val medicationEdges:RDD[Edge[EdgeProperty]] = medications.map(e => Edge(-e.person_id.toLong, e.drug_concept_id.toLong, PatientMedicationEdgeProperty(e)))
+    val revMedicationEdges:RDD[Edge[EdgeProperty]] = medications.map(e => Edge(e.drug_concept_id.toLong, -e.person_id.toLong, PatientMedicationEdgeProperty(e)))
 
     val vertices = snomedVertices.union(rxnormVertices).union(loincVertices).union(patientVertices)
-    val edges = snomedEdges.union(rxnormEdges).union(patlabEdges).union(patdiagEdges).union(medicationEdges)
-
+    val edges = snomedEdges.union(rxnormEdges).union(patlabEdges).union(labpatEdges).union(patdiagEdges).union(diagpatEdges).union(medicationEdges).union(revMedicationEdges)
     val graph: Graph[VertexProperty, EdgeProperty] = Graph(vertices, edges)
-    println("all vertices2: ", graph.vertices.count)
-    println("all edges2: ", graph.edges.count)
+    println("all vertices3: ", graph.vertices.count)
+    println("all edges3: ", graph.edges.count)
     
     graph
   }
