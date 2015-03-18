@@ -16,6 +16,14 @@ import scala.io.Source
 
 
 object Main {
+    def toInteger(s: String):Int = {
+  try {
+    s.toInt
+  } catch {
+    case e:Exception => 0
+  }
+}
+
   def main(args: Array[String]) {
     val sc = createContext
     val sqlContext = new SQLContext(sc)
@@ -85,10 +93,10 @@ object Main {
   def loadRddRawData(sqlContext: SQLContext): (RDD[PatientProperty], RDD[Medication], RDD[Observation], RDD[Diagnostic]) = {
 
     // split / clean data
-    /*val patient_data = CSVUtils.loadCSVAsTable(sqlContext, "data/person.csv", "patient")
-    val patients = patient_data.map(p=> PatientProperty(p(0).toString.toInt, p(1).toString.toInt, p(2).toString.toInt, p(3).toString.toInt, p(4).toString.toInt, p(5).toString.toInt, p(6).toString.toInt, p(7).toString.toInt, p(8).toString.toInt, p(9).toString.toInt, p(10).toString, p(11).toString, p(12).toString, p(13).toString))
+    val patient_data = CSVUtils.loadCSVAsTable(sqlContext, "data/person.csv", "patient")
+    val patients = patient_data.map(p=> PatientProperty(p(0).toString.toInt, p(1).toString.toInt, p(2).toString.toInt, p(3).toString.toInt, toInteger(p(4).toString), toInteger(p(4).toString), toInteger(p(4).toString), toInteger(p(4).toString), toInteger(p(4).toString), toInteger(p(4).toString), p(10).toString, p(11).toString, p(12).toString, p(13).toString))
     println("Patients", patients.count)
-
+    /*=
     val diagnostics_data = CSVUtils.loadCSVAsTable(sqlContext, "data/condition_occurrence.csv", "diagnostic")
     val diagnostics = diagnostics_data.map(a => Diagnostic(a(0).toString.toString.toInt, a(1).toString.toInt, a(2).toString.toInt, a(3).toString, a(4).toString, a(5).toString.toInt, a(6).toString, a(7).toString.toInt, a(8).toString.toInt, a(9).toString))
     println("Diagnostics", diagnostics.count)
