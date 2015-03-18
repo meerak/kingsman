@@ -22,10 +22,10 @@ object Main {
     val sqlContext = new SQLContext(sc)
 
     /** initialize loading of data */
-    val (patient, medication, labResult, diagnostic, snomed, ancestors) = loadRddRawData(sqlContext)
+    val (patient, medication, labResult, diagnostic, snomed, snomed_ancestors) = loadRddRawData(sqlContext)
 
     //build the graph
-    val graph = GraphLoader.load( patient, medication, labResult, diagnostic , snomed, ancestors)
+    val graph = GraphLoader.load( patient, medication, labResult, diagnostic , snomed, snomed_ancestors)
     /*
     //compute pagerank
     testPageRank(graph)
@@ -131,6 +131,9 @@ object Main {
     val rxnorm = rxnorm_data.map(r => (r(0).toString.toInt, r(1).toString, r(5).toString))
     //println("rxnorm", rxnorm.count)
 
+    val rxnorm_ancestor_data = CSVUtils.loadCSVAsTable(sqlContext, "data/ancestor_rxnorm.csv", "ancestors_rxnorm")
+    val rxnorm_ancestors = rxnorm_ancestor_data.map(s => ConceptAncestor(s(0).toString.toInt, s(1).toString.toInt))
+    
     val loinc_data = CSVUtils.loadCSVAsTable(sqlContext, "data/loinc.csv", "loinc")
     val loinc = loinc_data.map(l => (l(0).toString.toInt, l(1).toString, l(5).toString))
     //println("loinc", loinc.count)
@@ -139,11 +142,11 @@ object Main {
     val snomed = snomed_data.map(s => Snomed(s(0).toString.toInt, s(1).toString, s(5).toString))
     //println("snomed", snomed.count)
 
-    val ancestor_data = CSVUtils.loadCSVAsTable(sqlContext, "data/ancestors.csv", "ancestors")
-    val ancestors = ancestor_data.map(s => ConceptAncestor(s(0).toString.toInt, s(1).toString.toInt))
+    val ancestor_data = CSVUtils.loadCSVAsTable(sqlContext, "data/ancestor_snomed.csv", "ancestors")
+    val snomed_ancestors = ancestor_data.map(s => ConceptAncestor(s(0).toString.toInt, s(1).toString.toInt))
     //println("ancestors", ancestors.count)
 
-    (patients, medication, labResults, diagnostics, snomed,ancestors)
+    (patients, medication, labResults, diagnostics, snomed,snomed_ancestors, rxnorm, rxnorm_ancestors)
   }
 
   def createContext(appName: String, masterUrl: String): SparkContext = {
