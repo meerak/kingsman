@@ -32,10 +32,7 @@ abstract class EdgeProperty
 
 case class SampleEdgeProperty(name: String = "Sample") extends EdgeProperty
 
-case class PatientObservationProperty(observation_date: String, observation_time: String, value_as_number: Float, 
-    value_as_string:String, value_as_concept_id:Integer, unit_concept_id: Integer, range_low: Float, range_high: Float, 
-    observation_type_concept_id: Integer, associated_provider_id: Integer,
-    visit_occurrence_id: Integer, relevant_condition_concept_id:Integer, observation_source_value:String, units_source_value: String) extends EdgeProperty
+case class PatientObservationProperty(observation: Observation) extends EdgeProperty
 
 case class PatientDiagnosticEdgeProperty(diagnostic: Diagnostic) extends EdgeProperty
 
