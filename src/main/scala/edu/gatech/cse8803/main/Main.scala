@@ -22,10 +22,12 @@ object Main {
     val sqlContext = new SQLContext(sc)
 
     /** initialize loading of data */
-    val (patient, medication, labResult, diagnostic, snomed, snomed_ancestors) = loadRddRawData(sqlContext)
+   
+    //build the graph
+    val (patient, medication, labResult, diagnostic, rxnorm, loinc, snomed, snomed_ancestors, rxnorm_ancestors) = loadRddRawData(sqlContext)
 
     //build the graph
-    val graph = GraphLoader.load( patient, medication, labResult, diagnostic , snomed, snomed_ancestors)
+    val graph = GraphLoader.load(patient, medication, labResult, diagnostic, rxnorm, loinc, snomed, snomed_ancestors, rxnorm_ancestors)
     /*
     //compute pagerank
     testPageRank(graph)
@@ -108,7 +110,7 @@ object Main {
     }
   }
   
-  def loadRddRawData(sqlContext: SQLContext): (RDD[PatientProperty], RDD[Medication], RDD[Observation], RDD[Diagnostic], RDD[Snomed], RDD[ConceptAncestor]) = {
+  def loadRddRawData(sqlContext: SQLContext): (RDD[PatientProperty], RDD[Medication], RDD[Observation], RDD[Diagnostic], RDD[Vocabulary], RDD[Vocabulary], RDD[Vocabulary], RDD[ConceptAncestor], RDD[ConceptAncestor]) = {
 
     // split / clean data
     val patient_data = CSVUtils.loadCSVAsTable(sqlContext, "data/person.csv", "patient")
@@ -128,25 +130,25 @@ object Main {
     //println("medication", medication.count)
 
     val rxnorm_data = CSVUtils.loadCSVAsTable(sqlContext, "data/rxnorm.csv", "rxnorm")
-    val rxnorm = rxnorm_data.map(r => (r(0).toString.toInt, r(1).toString, r(5).toString))
+    val rxnorm = rxnorm_data.map(r => Vocabulary(r(0).toString.toInt, r(1).toString, r(5).toString))
     //println("rxnorm", rxnorm.count)
 
     val rxnorm_ancestor_data = CSVUtils.loadCSVAsTable(sqlContext, "data/ancestor_rxnorm.csv", "ancestors_rxnorm")
     val rxnorm_ancestors = rxnorm_ancestor_data.map(s => ConceptAncestor(s(0).toString.toInt, s(1).toString.toInt))
     
     val loinc_data = CSVUtils.loadCSVAsTable(sqlContext, "data/loinc.csv", "loinc")
-    val loinc = loinc_data.map(l => (l(0).toString.toInt, l(1).toString, l(5).toString))
+    val loinc = loinc_data.map(l => Vocabulary(l(0).toString.toInt, l(1).toString, l(5).toString))
     //println("loinc", loinc.count)
 
     val snomed_data = CSVUtils.loadCSVAsTable(sqlContext, "data/snomed.csv", "snomed")
-    val snomed = snomed_data.map(s => Snomed(s(0).toString.toInt, s(1).toString, s(5).toString))
+    val snomed = snomed_data.map(s => Vocabulary(s(0).toString.toInt, s(1).toString, s(5).toString))
     //println("snomed", snomed.count)
 
     val ancestor_data = CSVUtils.loadCSVAsTable(sqlContext, "data/ancestor_snomed.csv", "ancestors")
     val snomed_ancestors = ancestor_data.map(s => ConceptAncestor(s(0).toString.toInt, s(1).toString.toInt))
     //println("ancestors", ancestors.count)
 
-    (patients, medication, labResults, diagnostics, snomed,snomed_ancestors, rxnorm, rxnorm_ancestors)
+    (patients, medication, labResults, diagnostics, rxnorm, loinc, snomed,snomed_ancestors, rxnorm_ancestors)
   }
 
   def createContext(appName: String, masterUrl: String): SparkContext = {

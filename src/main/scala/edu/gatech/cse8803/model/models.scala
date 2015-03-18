@@ -14,7 +14,7 @@ case class Medication(drug_exposure_id: Integer, person_id: Integer, drug_concep
 
 case class ConceptAncestor(ancestor_concept_id:Integer, descendent_concept_id:Integer)
 
-case class Snomed(concept_id:Integer, conecpt_name:String, concept_code:String)
+case class Vocabulary(concept_id:Integer, conecpt_name:String, concept_code:String)
 
 abstract class VertexProperty
 
@@ -26,7 +26,7 @@ case class DiagnosticProperty(condition_concept_id: Integer) extends VertexPrope
 
 case class MedicationProperty(drug_concept_id: Integer) extends VertexProperty
 
-case class SnomedProperty(concept_id: Integer) extends VertexProperty
+case class VocabularyProperty(concept_id: Integer) extends VertexProperty
 
 abstract class EdgeProperty
 
