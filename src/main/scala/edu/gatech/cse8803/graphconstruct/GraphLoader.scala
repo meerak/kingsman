@@ -7,10 +7,11 @@ import org.apache.spark.rdd.RDD
 import edu.gatech.cse8803.enums._
 
 object GraphLoader {
-  def load(patients: RDD[PatientProperty],
+  def load(patients: RDD[PatientProperty], medications: RDD[Medication], labResults:RDD[Observation], diagnostics: RDD[Diagnostic], rxnorm:RDD[Vocabulary], loinc: RDD[Vocabulary], snomed:RDD[Vocabulary], snomed_ancestors:RDD[ConceptAncestor], rxnorm_ancestors:RDD[ConceptAncestor]): Graph[VertexProperty, EdgeProperty] = {
 
-    medications: RDD[Medication], labResults:RDD[Observation], diagnostics: RDD[Diagnostic], rxnorm:RDD[Vocabulary], loinc: RDD[Vocabulary], snomed:RDD[Vocabulary], snomed_ancestors:RDD[ConceptAncestor], rxnorm_ancestors:RDD[ConceptAncestor]): Graph[VertexProperty, EdgeProperty] = {
-
+    //val sqlContext = new org.apache.spark.sql.SQLContext(patients.sparkContext)
+    //val sc = sqlContext.sparkContext
+    val patientVertices: RDD[(VertexId, VertexProperty)] = patients.map(p => ((-p.person_id).toLong, p))
     //val sqlContext = new org.apache.spark.sql.SQLContext(patients.sparkContext)
     //val sc = sqlContext.sparkContext
     val loincVertices: RDD[(VertexId, VertexProperty)] = loinc.map(a=>(a.concept_id.toLong, VocabularyProperty(a.concept_id)))
@@ -54,7 +55,8 @@ object GraphLoader {
     val diagnosticEdges:RDD[Edge[EdgeProperty]] = maxDiagnostics.join(mapDiagnostics).map(e => Edge(e._2._1.patientID.toLong, e._2._2, PatientDiagnosticEdgeProperty(e._2._1)))
     val diagnosticEdgesReverse:RDD[Edge[EdgeProperty]] = maxDiagnostics.join(mapDiagnostics).map(e => Edge(e._2._2, e._2._1.patientID.toLong, PatientDiagnosticEdgeProperty(e._2._1)))
     val edges = labEdges.union(medicationEdges).union(diagnosticEdges).union(labEdgesReverse).union(medicationEdgesReverse).union(diagnosticEdgesReverse)*/
-    val vertices = snomedVertices.union(rxnormVertices).union(loincVertices)
+
+    val vertices = snomedVertices.union(rxnormVertices).union(loincVertices).union(patientVertices)
     val edges = snomedEdges.union(rxnormEdges)
     val graph: Graph[VertexProperty, EdgeProperty] = Graph(vertices, edges)
     println("all vertices: ", graph.vertices.count)
