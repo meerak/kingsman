@@ -23,11 +23,14 @@ object GraphLoader {
 
     val patdiagEdges: RDD[Edge[EdgeProperty]] = diagnostics.map(x => Edge((-x.person_id).toLong, x.condition_concept_id.toLong,  PatientDiagnosticEdgeProperty(x)))
 
+    val medicationEdges:RDD[Edge[EdgeProperty]] = medications.map(e => Edge(-e.person_id.toLong, e.drug_concept_id.toLong, PatientMedicationEdgeProperty(e)))
+
     val vertices = snomedVertices.union(rxnormVertices).union(loincVertices).union(patientVertices)
-    val edges = snomedEdges.union(rxnormEdges).union(patlabEdges).union(patdiagEdges)
+    val edges = snomedEdges.union(rxnormEdges).union(patlabEdges).union(patdiagEdges).union(medicationEdges)
+
     val graph: Graph[VertexProperty, EdgeProperty] = Graph(vertices, edges)
-    println("all vertices: ", graph.vertices.count)
-    println("all edges: ", graph.edges.count)
+    println("all vertices2: ", graph.vertices.count)
+    println("all edges2: ", graph.edges.count)
     
     graph
   }
