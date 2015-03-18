@@ -20,11 +20,13 @@ object GraphLoader {
     val rxnormEdges: RDD[Edge[EdgeProperty]] = rxnorm_ancestors.map(a=>Edge(a.descendent_concept_id.toLong, a.ancestor_concept_id.toLong, ConceptAncestorEdgeProperty(Enumerations.ISA)))
 
     val patlabEdges: RDD[Edge[EdgeProperty]] = labResults.map(x => Edge((-x.person_id).toLong, x.observation_concept_id.toLong,  PatientObservationProperty(x))) 
+    val labpatEdges: RDD[Edge[EdgeProperty]] = labResults.map(x => Edge(x.observation_concept_id.toLong, (-x.person_id).toLong, PatientObservationProperty(x))) 
 
     val patdiagEdges: RDD[Edge[EdgeProperty]] = diagnostics.map(x => Edge((-x.person_id).toLong, x.condition_concept_id.toLong,  PatientDiagnosticEdgeProperty(x)))
+    val diagpatEdges: RDD[Edge[EdgeProperty]] = diagnostics.map(x => Edge(x.condition_concept_id.toLong, (-x.person_id).toLong, PatientDiagnosticEdgeProperty(x)))
 
     val vertices = snomedVertices.union(rxnormVertices).union(loincVertices).union(patientVertices)
-    val edges = snomedEdges.union(rxnormEdges).union(patlabEdges).union(patdiagEdges)
+    val edges = snomedEdges.union(rxnormEdges).union(patlabEdges).union(patdiagEdges),union(diagpatEdges).union(labpatEdges)
     val graph: Graph[VertexProperty, EdgeProperty] = Graph(vertices, edges)
     println("all vertices: ", graph.vertices.count)
     println("all edges: ", graph.edges.count)
