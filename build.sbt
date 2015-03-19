@@ -15,8 +15,6 @@ libraryDependencies ++= Seq(
   "com.databricks"    % "spark-csv_2.10"               % "0.1",
   "com.chuusai"       % "shapeless_2.10.4"             % "2.0.0",
   "org.apache.spark"  % "spark-graphx_2.10"            % "1.2.1",
-  "org.postgresql" % "postgresql" % "9.3-1102-jdbc41",
-  "org.apache.commons" % "commons-dbcp2" % "2.0.1"
 )
 
 libraryDependencies ++= Seq(
