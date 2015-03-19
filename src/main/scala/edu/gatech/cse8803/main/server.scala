@@ -13,8 +13,7 @@ object Datasource
   {
     //val dbUrl = s"jdbc:postgresql://localhost:5432/" + dbname + "?user=sneha&password=sneha2511"
     val dbUrl = s"jdbc:postgresql://" + conf.getString("db-setting.host") + ":" + conf.getString("db-setting.port") + "/" + dbname + "?user=" + conf.getString("db-setting.user") + "&password=" + conf.getString("db-setting.password")
-    println(dbUrl)
-    /*val connectionPool = new BasicDataSource()
+    val connectionPool = new BasicDataSource()
     /*
     if (dbUri.getUserInfo != null) 
     {
@@ -25,7 +24,6 @@ object Datasource
     connectionPool.setDriverClassName("org.postgresql.Driver")
     connectionPool.setUrl(dbUrl)
     connectionPool.setInitialSize(3)
-    connectionPool*/
-    null
+    connectionPool
   }
 }
