@@ -16,9 +16,6 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.io.Source
 
-
-
-
 object Main {
 
   def main(args: Array[String]) {
@@ -116,14 +113,15 @@ object Main {
   
   def loadRddRawData(sqlContext: SQLContext): (RDD[PatientProperty], RDD[Medication], RDD[Observation], RDD[Diagnostic], RDD[Vocabulary], RDD[Vocabulary], RDD[Vocabulary], RDD[ConceptAncestor], RDD[ConceptAncestor], RDD[ConceptRelation], RDD[ConceptRelation], RDD[ConceptRelation]) = {
 
-    val connection = Datasource.connectionPool.getConnection
+    val connection = Datasource.connectServer("omop_vocabulary_v4")
+    //.connectionPool.getConnection
 
-    val stmt = connection.createStatement()
+    val stmt = connection.getConnection.createStatement()
     val rs = stmt.executeQuery("SELECT * FROM VOCABULARY;")
 
     while (rs.next()) 
     {
-        println("Read from DB: " + rs.getString("vocabulary_name") + "\n")
+        println(rs.getString("vocabulary_name") + "\n")
     }
 
     // split / clean data
