@@ -14,6 +14,8 @@ case class Medication(drug_exposure_id: Integer, person_id: Integer, drug_concep
 
 case class ConceptAncestor(ancestor_concept_id:Integer, descendent_concept_id:Integer)
 
+case class ConceptRelation(source:Integer, dest:Integer, relation:String)
+
 case class Vocabulary(concept_id:Integer, conecpt_name:String, concept_code:String)
 
 abstract class VertexProperty
@@ -40,3 +42,4 @@ case class PatientMedicationEdgeProperty(medication: Medication) extends EdgePro
 
 case class ConceptAncestorEdgeProperty(relation: Enumerations.Relation) extends EdgeProperty
 
+case class ConceptRelationEdgeProperty(relation: String) extends EdgeProperty
