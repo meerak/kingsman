@@ -13,7 +13,7 @@ import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.{SparkConf, SparkContext}
-
+import com.typesafe.config.{ConfigFactory, Config}
 import scala.io.Source
 
 object Main {
@@ -22,10 +22,13 @@ object Main {
     val sc = createContext
     val sqlContext = new SQLContext(sc)
 
+    /** get configuration*/
+    val conf = ConfigFactory.load()
+
     /** initialize loading of data */
    
     //build the graph
-    val (patient, medication, labResult, diagnostic, rxnorm, loinc, snomed, snomed_ancestors, rxnorm_ancestors, snomed_relations, rxnorm_relations, loinc_relations) = loadRddRawData(sqlContext)
+    val (patient, medication, labResult, diagnostic, rxnorm, loinc, snomed, snomed_ancestors, rxnorm_ancestors, snomed_relations, rxnorm_relations, loinc_relations) = loadRddRawData(sqlContext, conf)
 
     //build the graph
     val graph = GraphLoader.load(patient, medication, labResult, diagnostic, rxnorm, loinc, snomed, snomed_ancestors, rxnorm_ancestors, snomed_relations, rxnorm_relations, loinc_relations)
@@ -111,9 +114,9 @@ object Main {
     }
   }
   
-  def loadRddRawData(sqlContext: SQLContext): (RDD[PatientProperty], RDD[Medication], RDD[Observation], RDD[Diagnostic], RDD[Vocabulary], RDD[Vocabulary], RDD[Vocabulary], RDD[ConceptAncestor], RDD[ConceptAncestor], RDD[ConceptRelation], RDD[ConceptRelation], RDD[ConceptRelation]) = {
+  def loadRddRawData(sqlContext: SQLContext, conf:Config): (RDD[PatientProperty], RDD[Medication], RDD[Observation], RDD[Diagnostic], RDD[Vocabulary], RDD[Vocabulary], RDD[Vocabulary], RDD[ConceptAncestor], RDD[ConceptAncestor], RDD[ConceptRelation], RDD[ConceptRelation], RDD[ConceptRelation]) = {
 
-    val connection = Datasource.connectServer("omop_vocabulary_v4")
+    val connection = Datasource.connectServer(conf, "omop_vocabulary_v4")
     //.connectionPool.getConnection
 
     val stmt = connection.getConnection.createStatement()
