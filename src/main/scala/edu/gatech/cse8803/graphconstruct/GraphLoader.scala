@@ -7,17 +7,20 @@ import org.apache.spark.rdd.RDD
 import edu.gatech.cse8803.enums._
 
 object GraphLoader {
-  def load(patients: RDD[PatientProperty], medications: RDD[Medication], labResults:RDD[Observation], diagnostics: RDD[Diagnostic], rxnorm:RDD[Vocabulary], loinc: RDD[Vocabulary], snomed:RDD[Vocabulary], snomed_ancestors:RDD[ConceptAncestor], rxnorm_ancestors:RDD[ConceptAncestor]): Graph[VertexProperty, EdgeProperty] = {
+  def load(patients: RDD[PatientProperty], medications: RDD[Medication], labResults:RDD[Observation], diagnostics: RDD[Diagnostic], rxnorm:RDD[Vocabulary], loinc: RDD[Vocabulary], snomed:RDD[Vocabulary], snomed_ancestors:RDD[ConceptAncestor], rxnorm_ancestors:RDD[ConceptAncestor], snomed_relations:RDD[ConceptRelation], rxnorm_relations:RDD[ConceptRelation], loinc_relations:RDD[ConceptRelation]): Graph[VertexProperty, EdgeProperty] = {
 
     val patientVertices: RDD[(VertexId, VertexProperty)] = patients.map(p => ((-p.person_id).toLong, p))
     
     val loincVertices: RDD[(VertexId, VertexProperty)] = loinc.map(a=>(a.concept_id.toLong, VocabularyProperty(a.concept_id)))
+    val loincRelationEdges: RDD[Edge[EdgeProperty]] = loinc_relations.map(a=>Edge(a.source.toLong, a.dest.toLong, ConceptRelationEdgeProperty(a.relation)))
 
     val snomedVertices: RDD[(VertexId, VertexProperty)] = snomed.map(a=>(a.concept_id.toLong, VocabularyProperty(a.concept_id)))
     val snomedEdges: RDD[Edge[EdgeProperty]] = snomed_ancestors.map(a=>Edge(a.descendent_concept_id.toLong, a.ancestor_concept_id.toLong, ConceptAncestorEdgeProperty(Enumerations.ISA)))
+    val snomedRelationEdges: RDD[Edge[EdgeProperty]] = snomed_relations.map(a=>Edge(a.source.toLong, a.dest.toLong, ConceptRelationEdgeProperty(a.relation)))
 
     val rxnormVertices: RDD[(VertexId, VertexProperty)] = rxnorm.map(a=>(a.concept_id.toLong, VocabularyProperty(a.concept_id)))
     val rxnormEdges: RDD[Edge[EdgeProperty]] = rxnorm_ancestors.map(a=>Edge(a.descendent_concept_id.toLong, a.ancestor_concept_id.toLong, ConceptAncestorEdgeProperty(Enumerations.ISA)))
+    val rxnormRelationEdges: RDD[Edge[EdgeProperty]] = rxnorm_relations.map(a=>Edge(a.source.toLong, a.dest.toLong, ConceptRelationEdgeProperty(a.relation)))
 
     val patlabEdges: RDD[Edge[EdgeProperty]] = labResults.map(x => Edge((-x.person_id).toLong, x.observation_concept_id.toLong,  PatientObservationProperty(x))) 
     val labpatEdges: RDD[Edge[EdgeProperty]] = labResults.map(x => Edge(x.observation_concept_id.toLong, (-x.person_id).toLong, PatientObservationProperty(x))) 
@@ -29,7 +32,7 @@ object GraphLoader {
     val revMedicationEdges:RDD[Edge[EdgeProperty]] = medications.map(e => Edge(e.drug_concept_id.toLong, -e.person_id.toLong, PatientMedicationEdgeProperty(e)))
 
     val vertices = snomedVertices.union(rxnormVertices).union(loincVertices).union(patientVertices)
-    val edges = snomedEdges.union(rxnormEdges).union(patlabEdges).union(labpatEdges).union(patdiagEdges).union(diagpatEdges).union(medicationEdges).union(revMedicationEdges)
+    val edges = snomedEdges.union(rxnormEdges).union(patlabEdges).union(labpatEdges).union(patdiagEdges).union(diagpatEdges).union(medicationEdges).union(revMedicationEdges).union(loincRelationEdges).union(rxnormRelationEdges).union(snomedRelationEdges)
     val graph: Graph[VertexProperty, EdgeProperty] = Graph(vertices, edges)
     println("all vertices3: ", graph.vertices.count)
     println("all edges3: ", graph.edges.count)
