@@ -7,12 +7,16 @@ import edu.gatech.cse8803.ioutils.CSVUtils
 import edu.gatech.cse8803.jaccard._
 import edu.gatech.cse8803.model._
 import edu.gatech.cse8803.randomwalk._
+import edu.gatech.cse8803.main._
+
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.io.Source
+
+
 
 
 object Main {
@@ -112,11 +116,21 @@ object Main {
   
   def loadRddRawData(sqlContext: SQLContext): (RDD[PatientProperty], RDD[Medication], RDD[Observation], RDD[Diagnostic], RDD[Vocabulary], RDD[Vocabulary], RDD[Vocabulary], RDD[ConceptAncestor], RDD[ConceptAncestor], RDD[ConceptRelation], RDD[ConceptRelation], RDD[ConceptRelation]) = {
 
+    val connection = Datasource.connectionPool.getConnection
+
+    val stmt = connection.createStatement()
+    val rs = stmt.executeQuery("SELECT * FROM VOCABULARY;")
+
+    while (rs.next()) 
+    {
+        println("Read from DB: " + rs.getString("vocabulary_name") + "\n")
+    }
+
     // split / clean data
     val patient_data = CSVUtils.loadCSVAsTable(sqlContext, "data/person.csv", "patient")
     val patients = patient_data.map(p=> PatientProperty(toInt(p(0).toString), toInt(p(1).toString), toInt(p(2).toString), toInt(p(3).toString), toInt(p(4).toString), toInt(p(5).toString), toInt(p(6).toString), toInt(p(7).toString), toInt(p(8).toString), toInt(p(9).toString), p(10).toString, p(11).toString, p(12).toString, p(13).toString))
     //println("Patients", patients.count)
-    
+    /*
     val diagnostics_data = CSVUtils.loadCSVAsTable(sqlContext, "data/condition_occurrence.csv", "diagnostic")
     val diagnostics = diagnostics_data.map(a => Diagnostic(toInt(a(0).toString), toInt(a(1).toString), toInt(a(2).toString), a(3).toString, a(4).toString, toInt(a(5).toString), a(6).toString, toInt(a(7).toString), toInt(a(8).toString), a(9).toString))
     //println("Diagnostics", diagnostics.count)
@@ -156,8 +170,10 @@ object Main {
     val loinc_relation_data = CSVUtils.loadCSVAsTable(sqlContext, "data/relationship_snomed.csv", "relationship_loinc")
     val loinc_relations = loinc_relation_data.map(s => ConceptRelation(s(0).toString.toInt, s(1).toString.toInt, s(11).toString))
     //println("ancestors", ancestors.count)
-
+    
     (patients, medication, labResults, diagnostics, rxnorm, loinc, snomed,snomed_ancestors, rxnorm_ancestors, snomed_relations, rxnorm_relations, loinc_relations)
+    */
+    (null, null, null, null, null, null, null, null, null, null, null, null)
   }
 
   def createContext(appName: String, masterUrl: String): SparkContext = {
