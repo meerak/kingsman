@@ -15,8 +15,8 @@ import org.apache.spark.sql.SQLContext
 import org.apache.spark.{SparkConf, SparkContext}
 import com.typesafe.config.{ConfigFactory, Config}
 import scala.io.Source
-
-import scala.collection.mutable.MutableList
+import org.apache.spark.rdd.JdbcRDD
+import java.sql.{Connection, DriverManager, ResultSet}
 
 object Main {
 
@@ -30,7 +30,7 @@ object Main {
     /** initialize loading of data */
    
     //build the graph
-    val (patient, medication, labResult, diagnostic, rxnorm, loinc, snomed, snomed_ancestors, rxnorm_ancestors, snomed_relations, rxnorm_relations, loinc_relations) = loadRddRawData(sc, sqlContext, conf)
+    val (patient, medication, labResult, diagnostic, rxnorm, loinc, snomed, snomed_ancestors, rxnorm_ancestors, snomed_relations, rxnorm_relations, loinc_relations) = loadRddRawData(sqlContext, conf)
 
     //build the graph
     val graph = GraphLoader.load(patient, medication, labResult, diagnostic, rxnorm, loinc, snomed, snomed_ancestors, rxnorm_ancestors, snomed_relations, rxnorm_relations, loinc_relations)
@@ -91,7 +91,7 @@ object Main {
     p.foreach(println)
   }
     */
- /*   
+    
  def toInt(s: String):Int = 
   {
     try 
@@ -114,67 +114,50 @@ object Main {
     {
         case e:Exception => 0
     }
-  }*/
+  }
   
-  def loadRddRawData(sc: SparkContext, sqlContext: SQLContext, conf:Config): (RDD[PatientProperty], RDD[Medication], RDD[Observation], RDD[Diagnostic], RDD[Vocabulary], RDD[Vocabulary], RDD[Vocabulary], RDD[ConceptAncestor], RDD[ConceptAncestor], RDD[ConceptRelation], RDD[ConceptRelation], RDD[ConceptRelation]) = {
+  def loadRddRawData(sqlContext: SQLContext, conf:Config): (RDD[PatientProperty], RDD[Medication], RDD[Observation], RDD[Diagnostic], RDD[Vocabulary], RDD[Vocabulary], RDD[Vocabulary], RDD[ConceptAncestor], RDD[ConceptAncestor], RDD[ConceptRelation], RDD[ConceptRelation], RDD[ConceptRelation]) = {
 
-    val connection = Datasource.connectServer(conf, "omop_v4_mimic2")
-    val stmt = connection.getConnection.createStatement()
+    //val connection = Datasource.connectServer(conf, "omop_vocabulary_v4")
+    //.connectionPool.getConnection
 
-    //Person Table
-    val rs = stmt.executeQuery("SELECT * FROM person;")
-    val person: MutableList[PatientProperty] = MutableList()
+    /*val stmt = connection.getConnection.createStatement()
+    val rs = stmt.executeQuery("SELECT * FROM VOCABULARY;")
+
     while (rs.next()) 
     {
-        person ++= MutableList(PatientProperty(rs.getInt("person_id"), rs.getInt("gender_concept_id"), rs.getInt("year_of_birth"), rs.getInt("month_of_birth"), rs.getInt("day_of_birth"), rs.getInt("race_concept_id"), rs.getInt("ethnicity_concept_id"), rs.getInt("location_id"), rs.getInt("provider_id"), rs.getInt("care_site_id"), rs.getString("person_source_value"), rs.getString("gender_source_value"), rs.getString("race_source_value"), rs.getString("ethnicity_source_value")))
-    }
-    val patients = sc.parallelize(person)
+        println(rs.getString("vocabulary_name") + "\n")
+    }*/
+
+    val dbname = "omop_v4_mimic2"
+    val url = "jdbc:postgresql://" + conf.getString("db-setting.host") + ":" + conf.getString("db-setting.port") + "/" + dbname 
+    val username = conf.getString("db-setting.user") 
+    val password = conf.getString("db-setting.password")
+    val patients = new JdbcRDD(sqlContext.sparkContext, () => DriverManager.getConnection(url,username,password),
+"select * from Person",1,100,5, r => r.getInt("person_id"))
+
+    println("Patient count: ", patients.count)
+    // split / clean data
+    //val patient_data = CSVUtils.loadCSVAsTable(sqlContext, "data/person.csv", "patient")
+    //val patients = patient_data.map(p=> PatientProperty(toInt(p(0).toString), toInt(p(1).toString), toInt(p(2).toString), toInt(p(3).toString), toInt(p(4).toString), toInt(p(5).toString), toInt(p(6).toString), toInt(p(7).toString), toInt(p(8).toString), toInt(p(9).toString), p(10).toString, p(11).toString, p(12).toString, p(13).toString))
     //println("Patients", patients.count)
-    
-    //Diagnostic
-    val ds = stmt.executeQuery("SELECT * FROM condition_occurrence;")
-    val diagnosis: MutableList[Diagnostic] = MutableList()
-    while (ds.next()) 
-    {
-        diagnosis ++= MutableList(Diagnostic(ds.getInt("condition_occurrence_id"), ds.getInt("person_id"), ds.getInt("condition_concept_id"), ds.getString("condition_start_date"), ds.getString("condition_end_date"), ds.getInt("condition_type_concept_id"), ds.getString("stop_reason"), ds.getInt("associated_provider_id"), ds.getInt("visit_occurrence_id"), ds.getString("condition_source_value")))
-    }
-    val diagnostics = sc.parallelize(diagnosis)
+    /*
+    val diagnostics_data = CSVUtils.loadCSVAsTable(sqlContext, "data/condition_occurrence.csv", "diagnostic")
+    val diagnostics = diagnostics_data.map(a => Diagnostic(toInt(a(0).toString), toInt(a(1).toString), toInt(a(2).toString), a(3).toString, a(4).toString, toInt(a(5).toString), a(6).toString, toInt(a(7).toString), toInt(a(8).toString), a(9).toString))
     //println("Diagnostics", diagnostics.count)
     
-    //Medications
-    val ms = stmt.executeQuery("SELECT * FROM drug_exposure;")
-    val medicines: MutableList[Medication] = MutableList()
-    while (ms.next()) 
-    {
-        medicines ++= MutableList(Medication(ms.getInt("drug_exposure_id"), ms.getInt("person_id"), ms.getInt("drug_concept_id"), ms.getString("drug_exposure_start_date"), ms.getString("drug_exposure_end_date"), ms.getInt("drug_type_concept_id"), ms.getString("stop_reason"), ms.getInt("refills"), ms.getInt("quantity"), ms.getInt("days_supply"), ms.getString("sig"), ms.getInt("prescribing_provider_id"), ms.getInt("visit_occurrence_id"), ms.getInt("relevant_condition_concept_id"), ms.getString("drug_source_value")))
-    }
-    val medication = sc.parallelize(medicines)
+    val lab_data = CSVUtils.loadCSVAsTable(sqlContext, "data/observation.csv", "lab")
+    val labResults = lab_data.map(l => Observation(toInt(l(0).toString), toInt(l(1).toString), toInt(l(2).toString), l(3).toString, l(4).toString, toFloat(l(5).toString), l(6).toString, toInt(l(7).toString), toInt(l(8).toString), toFloat(l(9).toString), toFloat(l(10).toString), toInt(l(11).toString), toInt(l(12).toString), toInt(l(13).toString), toInt(l(14).toString), l(15).toString, l(16).toString))
+    //println("labResults", labResults.count)
+
+    val med_data = CSVUtils.loadCSVAsTable(sqlContext, "data/drug_exposure.csv", "medication")
+    val medication = med_data.map(p => Medication(toInt(p(0).toString), toInt(p(1).toString), toInt(p(2).toString), p(3).toString, p(4).toString, toInt(p(5).toString), p(6).toString, toInt(p(7).toString), toInt(p(8).toString), toInt(p(9).toString), p(10).toString, toInt(p(11).toString), toInt(p(12).toString),toInt(p(13).toString), p(14).toString))
     //println("medication", medication.count)
-    
-    //Labresults
-    val ls = stmt.executeQuery("SELECT * FROM observation;")
-    val labs: MutableList[Observation] = MutableList()
-    while (ls.next()) 
-    {
-        labs ++= MutableList(Observation(ls.getInt("observation_id"), ls.getInt("person_id"), ls.getInt("observation_concept_id"), ls.getString("observation_date"), ls.getString("observation_time"), ls.getFloat("value_as_number"), ls.getString("value_as_string"), ls.getInt("value_as_concept_id"), ls.getInt("unit_concept_id"), ls.getFloat("range_low"), ls.getFloat("range_high"), ls.getInt("observation_type_concept_id"), ls.getInt("associated_provider_id"), ls.getInt("visit_occurrence_id"), ls.getInt("relevant_condition_concept_id"), ls.getString("observation_source_value"), ls.getString("units_source_value")))
-    }
-    val labResults = sc.parallelize(labs)
-    println("labResults", labResults.count)
 
-    val v_connection = Datasource.connectServer(conf, "omop_vocabulary_v4")
-    val v_stmt = v_connection.getConnection.createStatement()
+    val rxnorm_data = CSVUtils.loadCSVAsTable(sqlContext, "data/rxnorm.csv", "rxnorm")
+    val rxnorm = rxnorm_data.map(r => Vocabulary(r(0).toString.toInt, r(1).toString, r(5).toString))
+    //println("rxnorm", rxnorm.count)
 
-    //RxNorm
-    val vrs = v_stmt.executeQuery("SELECT concept_id, concept_name, concept_code FROM concept WHERE vocabulary_id = 8;")
-    val rxnorm_data: MutableList[Vocabulary] = MutableList()
-    while (vrs.next()) 
-    {
-        rxnorm_data ++= MutableList(Vocabulary(vrs.getInt("concept_id"), vrs.getString("concept_name"), vrs.getString("concept_code")))
-    }
-    val rxnorm = sc.parallelize(rxnorm_data)
-    println("rxnorm", rxnorm.count)
-
-    /*
     val rxnorm_ancestor_data = CSVUtils.loadCSVAsTable(sqlContext, "data/ancestor_rxnorm.csv", "ancestors_rxnorm")
     val rxnorm_ancestors = rxnorm_ancestor_data.map(s => ConceptAncestor(s(0).toString.toInt, s(1).toString.toInt))
     
