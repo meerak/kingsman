@@ -15,6 +15,9 @@ import org.apache.spark.sql.SQLContext
 import org.apache.spark.{SparkConf, SparkContext}
 import com.typesafe.config.{ConfigFactory, Config}
 import scala.io.Source
+import org.apache.spark.rdd.JdbcRDD
+import java.sql.{Connection, DriverManager, ResultSet}
+import org.postgresql.Driver
 
 object Main {
 
@@ -116,20 +119,33 @@ object Main {
   
   def loadRddRawData(sqlContext: SQLContext, conf:Config): (RDD[PatientProperty], RDD[Medication], RDD[Observation], RDD[Diagnostic], RDD[Vocabulary], RDD[Vocabulary], RDD[Vocabulary], RDD[ConceptAncestor], RDD[ConceptAncestor], RDD[ConceptRelation], RDD[ConceptRelation], RDD[ConceptRelation]) = {
 
-    val connection = Datasource.connectServer(conf, "omop_vocabulary_v4")
+    //val connection = Datasource.connectServer(conf, "omop_vocabulary_v4")
     //.connectionPool.getConnection
 
-    val stmt = connection.getConnection.createStatement()
+    /*val stmt = connection.getConnection.createStatement()
     val rs = stmt.executeQuery("SELECT * FROM VOCABULARY;")
 
     while (rs.next()) 
     {
         println(rs.getString("vocabulary_name") + "\n")
-    }
+    }*/
 
+    /*val dbname ="omop_v4_mimic2"
+        Class.forName("org.postgresql.Driver").newInstance()
+        val conn_str = s"jdbc:postgresql://localhost/" + conf.getString("db-setting.host") + ":" + conf.getString("db-setting.port") + "/" + dbname + "?user=" + conf.getString("db-setting.user") + "&password=" + conf.getString("db-setting.password")
+        //println("abc", DriverManager.getConnection(conn_str))
+        val conn = DriverManager.getConnection(conn_str)
+        println(conn)
+    println("context1", sqlContext.sparkContext)
+    val username = conf.getString("db-setting.user") 
+    val password = conf.getString("db-setting.password")
+    val patients = new JdbcRDD(sqlContext.sparkContext, () => DriverManager.getConnection(conn_str),
+"SELECT * from person LIMIT ?,?;",1,100,5, r => r.getInt("person_id"))*/
+
+    println(patients)
     // split / clean data
-    val patient_data = CSVUtils.loadCSVAsTable(sqlContext, "data/person.csv", "patient")
-    val patients = patient_data.map(p=> PatientProperty(toInt(p(0).toString), toInt(p(1).toString), toInt(p(2).toString), toInt(p(3).toString), toInt(p(4).toString), toInt(p(5).toString), toInt(p(6).toString), toInt(p(7).toString), toInt(p(8).toString), toInt(p(9).toString), p(10).toString, p(11).toString, p(12).toString, p(13).toString))
+    //val patient_data = CSVUtils.loadCSVAsTable(sqlContext, "data/person.csv", "patient")
+    //val patients = patient_data.map(p=> PatientProperty(toInt(p(0).toString), toInt(p(1).toString), toInt(p(2).toString), toInt(p(3).toString), toInt(p(4).toString), toInt(p(5).toString), toInt(p(6).toString), toInt(p(7).toString), toInt(p(8).toString), toInt(p(9).toString), p(10).toString, p(11).toString, p(12).toString, p(13).toString))
     //println("Patients", patients.count)
     /*
     val diagnostics_data = CSVUtils.loadCSVAsTable(sqlContext, "data/condition_occurrence.csv", "diagnostic")
