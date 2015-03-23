@@ -19,3 +19,7 @@ libraryDependencies ++= Seq(
   "org.apache.commons" % "commons-dbcp2" % "2.0.1",
   "com.typesafe" % "config" % "1.2.1"
 )
+
+val buildSettings = Defaults.defaultSettings ++ Seq(
+  javaOptions += "-Xmx2G -XX:MaxPermSize=512m"
+)

@@ -1,7 +1,6 @@
 package edu.gatech.cse8803.main
 
 import java.sql.Connection
-import java.sql.Statement
 import org.apache.commons.dbcp2._
 import com.typesafe.config.Config
 import scala.io.Source
