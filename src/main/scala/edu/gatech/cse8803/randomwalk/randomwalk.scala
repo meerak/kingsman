@@ -12,7 +12,7 @@ import org.apache.spark.graphx._
 import org.apache.spark.SparkContext._
 
 object RandomWalk {
-  /*
+  
   def randomWalkOneVsAll(graph: Graph[VertexProperty, EdgeProperty], patientID: String , numIter: Int = 10, alpha: Double = 0.15): List[String] = {
     //compute ready state probabilities between patient patientID (NOT VERTEX ID) and all other patients and return the top 10 similar patients
      // Initialize the PageRank graph with each edge attribute having
@@ -49,24 +49,25 @@ object RandomWalk {
         (id, oldRank, msgSum) => (1.0 - alpha) * msgSum + alpha*(if(id==patientID.toLong) 1.0 else 0.0)
       }.cache()
 
-      rankGraph.edges.foreachPartition(x => {}) // also materializes rankGraph.vertices
+      //rankGraph.edges.foreachPartition(x => {}) // also materializes rankGraph.vertices
       prevRankGraph.vertices.unpersist(false)
       prevRankGraph.edges.unpersist(false)
 
       iteration += 1
     }
 
-    val maxPatientVertexID = graph.vertices.filter { case (id, vertex) => vertex.isInstanceOf[PatientProperty]}.map(f=>f._2.asInstanceOf[PatientProperty].patientID).toArray.maxBy(f=>f.toLong).toLong
-
-    val top10 = rankGraph.vertices.filter(x=> ((x._1 <= maxPatientVertexID)&& x._1!=patientID.toLong)).top(10) {
+    //val maxPatientVertexID = graph.vertices.filter { case (id, vertex) => vertex.isInstanceOf[PatientProperty]}.map(f=>f._2.asInstanceOf[PatientProperty].patientID).toArray.maxBy(f=>f.toLong).toLong
+    val top10 = rankGraph.vertices.filter(x=> ((x._1 <= 0)&& x._1!=patientID.toLong)).top(10) {
         Ordering.by((entry: (VertexId, Double)) => entry._2)
-    }.map(x=>(x._1.toString)).toList
+    }.toList
+    //.map(x=>(x._1.toString)).toList
 
     //l.foreach(println)
 
-    top10
+    top10.foreach(println)
+    null
   }
-
+/*
   def summarize(graph: Graph[VertexProperty, EdgeProperty], patientIDs: List[String] ): (List[String], List[String], List[String])  = {
 
    val patientRelatedEdges = graph.triplets.filter(t=>(patientIDs.contains(t.srcId.toString))).cache()

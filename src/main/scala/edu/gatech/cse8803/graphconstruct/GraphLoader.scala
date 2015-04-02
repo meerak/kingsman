@@ -11,14 +11,14 @@ object GraphLoader {
 
     val patientVertices: RDD[(VertexId, VertexProperty)] = patients.map(p => ((-p.person_id).toLong, p))
     
-    val loincVertices: RDD[(VertexId, VertexProperty)] = loinc.map(a=>(a.concept_id.toLong, VocabularyProperty(a.concept_id)))
+    val loincVertices: RDD[(VertexId, VertexProperty)] = loinc.map(a=>(a.concept_id.toLong, ObservationProperty(a.concept_id)))
     val loincRelationEdges: RDD[Edge[EdgeProperty]] = loinc_relations.map(a=>Edge(a.source.toLong, a.dest.toLong, ConceptRelationEdgeProperty(a.relation)))
 
-    val snomedVertices: RDD[(VertexId, VertexProperty)] = snomed.map(a=>(a.concept_id.toLong, VocabularyProperty(a.concept_id)))
+    val snomedVertices: RDD[(VertexId, VertexProperty)] = snomed.map(a=>(a.concept_id.toLong, DiagnosticProperty(a.concept_id)))
     val snomedEdges: RDD[Edge[EdgeProperty]] = snomed_ancestors.map(a=>Edge(a.descendent_concept_id.toLong, a.ancestor_concept_id.toLong, ConceptAncestorEdgeProperty(Enumerations.ISA)))
     val snomedRelationEdges: RDD[Edge[EdgeProperty]] = snomed_relations.map(a=>Edge(a.source.toLong, a.dest.toLong, ConceptRelationEdgeProperty(a.relation)))
 
-    val rxnormVertices: RDD[(VertexId, VertexProperty)] = rxnorm.map(a=>(a.concept_id.toLong, VocabularyProperty(a.concept_id)))
+    val rxnormVertices: RDD[(VertexId, VertexProperty)] = rxnorm.map(a=>(a.concept_id.toLong, MedicationProperty(a.concept_id)))
     val rxnormEdges: RDD[Edge[EdgeProperty]] = rxnorm_ancestors.map(a=>Edge(a.descendent_concept_id.toLong, a.ancestor_concept_id.toLong, ConceptAncestorEdgeProperty(Enumerations.ISA)))
     val rxnormRelationEdges: RDD[Edge[EdgeProperty]] = rxnorm_relations.map(a=>Edge(a.source.toLong, a.dest.toLong, ConceptRelationEdgeProperty(a.relation)))
 
@@ -33,33 +33,36 @@ object GraphLoader {
 
     val vertices = snomedVertices.union(rxnormVertices).union(loincVertices).union(patientVertices)
     val edges = snomedEdges.union(rxnormEdges).union(patlabEdges).union(labpatEdges).union(patdiagEdges).union(diagpatEdges).union(medicationEdges).union(revMedicationEdges).union(loincRelationEdges).union(rxnormRelationEdges).union(snomedRelationEdges)
+    //val edges = patlabEdges.union(labpatEdges).union(patdiagEdges).union(diagpatEdges).union(medicationEdges).union(revMedicationEdges)
+
     val graph: Graph[VertexProperty, EdgeProperty] = Graph(vertices, edges)
-    println("all vertices3: ", graph.vertices.count)
-    println("all edges3: ", graph.edges.count)
+    println("all vertices: ", graph.vertices.count)
+    println("all edges: ", graph.edges.count)
     
     graph
   }
-  /*
-  def runPageRank(graph:  Graph[VertexProperty, EdgeProperty] ): List[(String, Double)] ={
+  
+  def runPageRank(graph:  Graph[VertexProperty, EdgeProperty] ): List[(Long, Double)] ={
     //run pagerank provided by GraphX
     //return the top 5 mostly highly ranked vertices
     //for each vertex return the vertex name, which can be patientID, test_name or medication name and the corresponding rank
     //see example below
     
     val prGraph = graph.staticPageRank(10, 0.15).cache
-    val prGraphProp = graph.outerJoinVertices(prGraph.vertices) {
-        (id, VertexProperty, rank) => (VertexProperty match{ 
-        case a: PatientProperty => a.patientID
-        case b: MedicationProperty => b.medicine
-        case c: LabResultProperty => c.testName
-        case d: DiagnosticProperty => d.icd9code
+    /*val prGraphProp = graph.outerJoinVertices(prGraph.vertices) {
+        (id, rank) => (VertexProperty match{ 
+        case a: PatientProperty => a.person_id
+        case b: MedicationProperty => b.drug_concept_id.toLong
+        case c: ObservationProperty => c.observation_concept_id.toLong
+        case d: DiagnosticProperty => d.condition_concept_id.toLong
+        case e: VocabularyProperty => e.concept_id.toLong
         },  rank.getOrElse(0.0))
-    }
-    val  top = prGraphProp.vertices.top(5) {
-        Ordering.by((entry: (VertexId, (String, Double))) => entry._2._2)
+    }*/
+    val  top = prGraph.vertices.top(5) {
+        Ordering.by((entry: (VertexId, Double)) => entry._2)
     }
 
-    val p  = top.map(t=> (t._2._1 , t._2._2)).toList
+    val p  = top.map(t=> (t._1 , t._2)).toList
     p
-  }*/
+  }
 }

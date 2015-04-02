@@ -2,7 +2,7 @@ package edu.gatech.cse8803.main
 
 import edu.gatech.cse8803.graphconstruct.GraphLoader
 import edu.gatech.cse8803.ioutils.CSVUtils
-import edu.gatech.cse8803.jaccard._
+import edu.gatech.cse8803.metrics._
 import edu.gatech.cse8803.model._
 import edu.gatech.cse8803.randomwalk._
 import edu.gatech.cse8803.main._
@@ -38,42 +38,52 @@ object Main {
         /** build the graph */
         val graph = GraphLoader.load(patient, medication, labResult, diagnostic, rxnorm, loinc, snomed, snomed_ancestors, rxnorm_ancestors, snomed_relations, rxnorm_relations, loinc_relations)
         
-        /*
         //compute pagerank
-        testPageRank(graph)
+        //testRandomWalk(graph)
         
         //Jaccard using only diagnosis
-        testJaccard(graph, 1, 0, 0)
-
+        testCosine(graph, 1, 0, 0)
+        /*
         //Weighted Jaccard
         testJaccard(graph, 0.5, 0.3, 0.2)
 
         //Random walk similarity
         testRandomWalk(graph)
         */
+        //testCosine(graph, 1, 0, 0)
     }
-  /*
+  
+  def testCosine( graphInput:  Graph[VertexProperty, EdgeProperty], wd: Double, wm: Double, wl: Double ) = {
+    val patientIDtoLookup = "-87907000001"
+
+    val answerTop10patients = CosineSimilarity.cosineSimilarityOneVsAll(graphInput, patientIDtoLookup, wd, wm, wl)
+    answerTop10patients.foreach(println)
+    null
+  }
+  
   def testJaccard( graphInput:  Graph[VertexProperty, EdgeProperty], wd: Double, wm: Double, wl: Double ) = {
-    val patientIDtoLookup = "5"
+    val patientIDtoLookup = "-87907000001"
 
     val answerTop10patients = Jaccard.jaccardSimilarityOneVsAll(graphInput, patientIDtoLookup, wd, wm, wl)
-    val (answerTop10med, answerTop10diag, answerTop10lab) = Jaccard.summarize(graphInput, answerTop10patients)
+    println("Jaccard values")
+    answerTop10patients.foreach(println)
+    /*val (answerTop10med, answerTop10diag, answerTop10lab) = Jaccard.summarize(graphInput, answerTop10patients)
     //compute Jaccard coefficient on the graph 
     println("the top 10 most similar patients are: ")
     // print the patinet IDs here
-    answerTop10patients.foreach(println)
     println("the top 10 meds, diagnoses, and labs for these 10 patients are: ")
     //print the meds, diagnoses and labs here
     answerTop10med.foreach(println)
     answerTop10diag.foreach(println)
-    answerTop10lab.foreach(println)
+    answerTop10lab.foreach(println)*/
     null
   }
   
   def testRandomWalk( graphInput:  Graph[VertexProperty, EdgeProperty] ) = {
-    val patientIDtoLookup = "5"
+    val patientIDtoLookup = "-87907000001"
     val answerTop10patients = RandomWalk.randomWalkOneVsAll(graphInput, patientIDtoLookup)
-    val (answerTop10med, answerTop10diag, answerTop10lab) = RandomWalk.summarize(graphInput, answerTop10patients)
+    //answerTop10patients.foreach(println)
+    /*val (answerTop10med, answerTop10diag, answerTop10lab) = RandomWalk.summarize(graphInput, answerTop10patients)
     /* compute Jaccard coefficient on the graph */
     println("the top 10 most similar patients are: ")
     // print the patinet IDs here
@@ -82,7 +92,7 @@ object Main {
     //print the meds, diagnoses and labs here
     answerTop10med.foreach(println)
     answerTop10diag.foreach(println)
-    answerTop10lab.foreach(println)
+    answerTop10lab.foreach(println)*/
     null
   }
 
@@ -94,7 +104,7 @@ object Main {
     val p = GraphLoader.runPageRank(graphInput)
     p.foreach(println)
   }
-  */
+
  /*   
  def toInt(s: String):Int = 
   {
@@ -175,6 +185,8 @@ object Main {
         val patients = sc.parallelize(person)
         //println("Patients", patients.count)
         
+        val patientVertices: RDD[(VertexId, VertexProperty)] = patients.map(p => ((-p.person_id).toLong, p))
+    
         //Diagnostic
         val ds = stmt.executeQuery("SELECT * FROM condition_occurrence;")
         val diagnosis: MutableList[Diagnostic] = MutableList()
@@ -194,18 +206,18 @@ object Main {
         }
         val medication = sc.parallelize(medicines)
         //println("medication", medication.count)
-        /*
+        
         //Labresults
         val ls = stmt.executeQuery("SELECT * FROM observation;")
         val labs: MutableList[Observation] = MutableList()
         while (ls.next()) 
         {
-            labs ++= MutableList(Observation(ls.getInt("observation_id"), ls.getInt("person_id"), ls.getInt("observation_concept_id"), ls.getString("observation_date"), ls.getString("observation_time"), ls.getFloat("value_as_number"), ls.getString("value_as_string"), ls.getInt("value_as_concept_id"), ls.getInt("unit_concept_id"), ls.getFloat("range_low"), ls.getFloat("range_high"), ls.getInt("observation_type_concept_id"), ls.getInt("associated_provider_id"), ls.getInt("visit_occurrence_id"), ls.getInt("relevant_condition_concept_id"), ls.getString("observation_source_value"), ls.getString("units_source_value")))
+            labs ++= MutableList(Observation(ls.getInt("observation_id"), ls.getLong("person_id"), ls.getInt("observation_concept_id"), ls.getString("observation_date"), ls.getString("observation_time"), ls.getFloat("value_as_number"), ls.getString("value_as_string"), ls.getInt("value_as_concept_id"), ls.getInt("unit_concept_id"), ls.getFloat("range_low"), ls.getFloat("range_high"), ls.getInt("observation_type_concept_id"), ls.getInt("associated_provider_id"), ls.getBigDecimal("visit_occurrence_id"), ls.getInt("relevant_condition_concept_id"), ls.getString("observation_source_value"), ls.getString("units_source_value")))
         }
         val labResults = sc.parallelize(labs)
-        println("labResults", labResults.count)
-        */
-        val labResults =null
+        //println("labResults", labResults.count)
+        
+        //val labResults =null
 
         (patients, medication, labResults, diagnostics)
     }   
@@ -224,7 +236,7 @@ object Main {
         val rxnorm = sc.parallelize(rxnorm_data)
         println("rxnorm", rxnorm.count)
 
-        val ras = v_stmt.executeQuery("SELECT ancestor_concept_id, descendant_concept_id FROM concept_ancestor WHERE ancestor_concept_id IN (select concept_id from concept where vocabulary_id = 8) AND descendant_concept_id IN (select concept_id from concept where vocabulary_id = 8) AND descendant_concept_id != ancestor_concept_id;")
+        /*val ras = v_stmt.executeQuery("SELECT ancestor_concept_id, descendant_concept_id FROM concept_ancestor WHERE ancestor_concept_id IN (select concept_id from concept where vocabulary_id = 8) AND descendant_concept_id IN (select concept_id from concept where vocabulary_id = 8) AND descendant_concept_id != ancestor_concept_id;")
         val rxnorm_ancestor_data: MutableList[ConceptAncestor] = MutableList()
         while (ras.next()) 
         {
@@ -232,7 +244,7 @@ object Main {
         }
         val rxnorm_ancestors = sc.parallelize(rxnorm_ancestor_data)
         println("rxnorm A", rxnorm_ancestors.count)
-
+    
         val rrs = v_stmt.executeQuery("select c.concept_id_1 as concept_id_1, c.concept_id_2 as concept_id_2, r.relationship_name as relationship_name from concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (select concept_id from concept where vocabulary_id = 8) and c.concept_id_2 in (select concept_id from concept where vocabulary_id = 8) and c.concept_id_1 != c.concept_id_2;")
         val rxnorm_relation_data: MutableList[ConceptRelation] = MutableList()
         while (rrs.next()) 
@@ -241,7 +253,7 @@ object Main {
         }
         val rxnorm_relations = sc.parallelize(rxnorm_relation_data)
         println("rxnorm R", rxnorm_relations.count)
-
+        */
         //Loinc
         val lds = v_stmt.executeQuery("SELECT concept_id, concept_name, concept_code FROM concept WHERE vocabulary_id = 6;")
         val loinc_data: MutableList[Vocabulary] = MutableList()
@@ -252,7 +264,7 @@ object Main {
         val loinc = sc.parallelize(loinc_data)
         println("loinc", loinc.count)
 
-
+        /*
         val lrs = v_stmt.executeQuery("select c.concept_id_1 as concept_id_1, c.concept_id_2 as concept_id_2, r.relationship_name as relationship_name from concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (select concept_id from concept where vocabulary_id = 6) and c.concept_id_2 in (select concept_id from concept where vocabulary_id = 6) and c.concept_id_1 != c.concept_id_2;")
         val loinc_relation_data: MutableList[ConceptRelation] = MutableList()
         while (lrs.next()) 
@@ -261,7 +273,7 @@ object Main {
         }
         val loinc_relations = sc.parallelize(loinc_relation_data)
         println("loinc R", loinc_relations.count)
-
+        */
         //Snomed
         val sds = v_stmt.executeQuery("SELECT concept_id, concept_name, concept_code FROM concept WHERE vocabulary_id = 1;")
         val snomed_data: MutableList[Vocabulary] = MutableList()
@@ -271,7 +283,7 @@ object Main {
         }
         val snomed = sc.parallelize(snomed_data)
         //println("Snomed", snomed.count)
-
+        /*
         val sas = v_stmt.executeQuery("SELECT ancestor_concept_id, descendant_concept_id FROM concept_ancestor WHERE ancestor_concept_id IN (select concept_id from concept where vocabulary_id = 1) AND descendant_concept_id IN (select concept_id from concept where vocabulary_id = 1) AND descendant_concept_id != ancestor_concept_id;")
         val snomed_ancestor_data: MutableList[ConceptAncestor] = MutableList()
         while (sas.next()) 
@@ -289,7 +301,12 @@ object Main {
         }
         val snomed_relations = sc.parallelize(snomed_relation_data)
         println("Snomed R", snomed_relations.count)
-
+        */
+        val snomed_ancestors=null
+        val rxnorm_ancestors=null
+        val snomed_relations=null
+        val rxnorm_relations=null
+        val loinc_relations=null
         (rxnorm, loinc, snomed,snomed_ancestors, rxnorm_ancestors, snomed_relations, rxnorm_relations, loinc_relations)
     }
 
