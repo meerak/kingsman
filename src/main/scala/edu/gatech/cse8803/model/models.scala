@@ -16,7 +16,7 @@ case class ConceptAncestor(ancestor_concept_id:Integer, descendent_concept_id:In
 
 case class ConceptRelation(source:Integer, dest:Integer, relation:String)
 
-case class Vocabulary(concept_id:Integer, conecpt_name:String, concept_code:String)
+case class Vocabulary(concept_id:Integer, concept_name:String, concept_code:String)
 
 abstract class VertexProperty
 
