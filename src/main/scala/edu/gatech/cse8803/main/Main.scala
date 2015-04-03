@@ -61,6 +61,13 @@ object Main {
     null
   }
   
+  def testKNN( graphInput:  Graph[VertexProperty, EdgeProperty] ) = {
+    
+    val knnanswer = graphInput.vertices.map(x => (x._1, x._2.asInstanceOf[PatientProperty].dead, knnAllVsAll(graphInput, x._1.toString)))
+    
+    knnanswer.foreach(println)
+  }
+  
   def testJaccard( graphInput:  Graph[VertexProperty, EdgeProperty], wd: Double, wm: Double, wl: Double ) = {
     val patientIDtoLookup = "-87907000001"
 
