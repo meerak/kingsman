@@ -39,13 +39,13 @@ object Main {
         val graph = GraphLoader.load(patient, medication, labResult, diagnostic, rxnorm, loinc, snomed, snomed_ancestors, rxnorm_ancestors, snomed_relations, rxnorm_relations, loinc_relations)
         
         //compute pagerank
-        //testRandomWalk(graph)
+        testKNN(graph)
         
         //Jaccard using only diagnosis
         //testCosine(graph, 1, 0, 0)
         
         //Weighted Jaccard
-        testJaccard(graph, 0.5, 0.3, 0.2)
+        //testJaccard(graph, 0.5, 0.3, 0.2)
 
         //Random walk similarity
         //testRandomWalk(graph)
@@ -63,9 +63,12 @@ object Main {
   
   def testKNN( graphInput:  Graph[VertexProperty, EdgeProperty] ) = {
     
-    val knnanswer = graphInput.vertices.map(x => (x._1, x._2.asInstanceOf[PatientProperty].dead, knnAllVsAll(graphInput, x._1.toString)))
-    
-    knnanswer.foreach(println)
+    //val patientIDtoLookup = "-87907000001"
+    //val patientIDtoLookup = "-94169102" //dead
+    //val knnanswer = KNN.knnAllVsAll(graphInput, patientIDtoLookup)
+    val knnanswer = graphInput.vertices.map(x => (x._1, x._2.asInstanceOf[PatientProperty].dead, KNN.knnAllVsAll(graphInput, x._1.toString)))
+    knnanswer.repartition(1).saveAsTextFile("knn.txt")
+    //println("KNN answer", knnanswer)
   }
   
   def testJaccard( graphInput:  Graph[VertexProperty, EdgeProperty], wd: Double, wm: Double, wl: Double ) = {
