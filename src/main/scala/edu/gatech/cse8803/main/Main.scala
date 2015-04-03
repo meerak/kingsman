@@ -42,14 +42,14 @@ object Main {
         //testRandomWalk(graph)
         
         //Jaccard using only diagnosis
-        testCosine(graph, 1, 0, 0)
-        /*
+        //testCosine(graph, 1, 0, 0)
+        
         //Weighted Jaccard
         testJaccard(graph, 0.5, 0.3, 0.2)
 
         //Random walk similarity
-        testRandomWalk(graph)
-        */
+        //testRandomWalk(graph)
+        
         //testCosine(graph, 1, 0, 0)
     }
   
@@ -82,7 +82,8 @@ object Main {
   def testRandomWalk( graphInput:  Graph[VertexProperty, EdgeProperty] ) = {
     val patientIDtoLookup = "-87907000001"
     val answerTop10patients = RandomWalk.randomWalkOneVsAll(graphInput, patientIDtoLookup)
-    //answerTop10patients.foreach(println)
+    println("Random walk values")
+    answerTop10patients.foreach(println)
     /*val (answerTop10med, answerTop10diag, answerTop10lab) = RandomWalk.summarize(graphInput, answerTop10patients)
     /* compute Jaccard coefficient on the graph */
     println("the top 10 most similar patients are: ")
@@ -176,11 +177,11 @@ object Main {
         // load Tables
 
         //Person Table
-        val rs = stmt.executeQuery("SELECT * FROM person;")
+        val rs = stmt.executeQuery("SELECT p.*, d.death_date FROM person as p left join death as d on p.person_id = d.person_id;")
         val person: MutableList[PatientProperty] = MutableList()
         while (rs.next()) 
         {
-            person ++= MutableList(PatientProperty(rs.getLong("person_id"), rs.getInt("gender_concept_id"), rs.getInt("year_of_birth"), rs.getInt("month_of_birth"), rs.getInt("day_of_birth"), rs.getInt("race_concept_id"), rs.getInt("ethnicity_concept_id"), rs.getInt("location_id"), rs.getInt("provider_id"), rs.getInt("care_site_id"), rs.getString("person_source_value"), rs.getString("gender_source_value"), rs.getString("race_source_value"), rs.getString("ethnicity_source_value")))
+            person ++= MutableList(PatientProperty(rs.getLong("person_id"), rs.getInt("gender_concept_id"), rs.getInt("year_of_birth"), rs.getInt("month_of_birth"), rs.getInt("day_of_birth"), rs.getInt("race_concept_id"), rs.getInt("ethnicity_concept_id"), rs.getInt("location_id"), rs.getInt("provider_id"), rs.getInt("care_site_id"), rs.getString("person_source_value"), rs.getString("gender_source_value"), rs.getString("race_source_value"), rs.getString("ethnicity_source_value"), if(rs.getString("death_date")!=null) 1 else 0 ))
         }
         val patients = sc.parallelize(person)
         //println("Patients", patients.count)
@@ -236,7 +237,7 @@ object Main {
         val rxnorm = sc.parallelize(rxnorm_data)
         println("rxnorm", rxnorm.count)
 
-        /*val ras = v_stmt.executeQuery("SELECT ancestor_concept_id, descendant_concept_id FROM concept_ancestor WHERE ancestor_concept_id IN (select concept_id from concept where vocabulary_id = 8) AND descendant_concept_id IN (select concept_id from concept where vocabulary_id = 8) AND descendant_concept_id != ancestor_concept_id;")
+        val ras = v_stmt.executeQuery("SELECT ancestor_concept_id, descendant_concept_id FROM concept_ancestor WHERE ancestor_concept_id IN (select concept_id from concept where vocabulary_id = 8) AND descendant_concept_id IN (select concept_id from concept where vocabulary_id = 8) AND descendant_concept_id != ancestor_concept_id;")
         val rxnorm_ancestor_data: MutableList[ConceptAncestor] = MutableList()
         while (ras.next()) 
         {
@@ -253,7 +254,7 @@ object Main {
         }
         val rxnorm_relations = sc.parallelize(rxnorm_relation_data)
         println("rxnorm R", rxnorm_relations.count)
-        */
+        
         //Loinc
         val lds = v_stmt.executeQuery("SELECT concept_id, concept_name, concept_code FROM concept WHERE vocabulary_id = 6;")
         val loinc_data: MutableList[Vocabulary] = MutableList()
@@ -264,7 +265,7 @@ object Main {
         val loinc = sc.parallelize(loinc_data)
         println("loinc", loinc.count)
 
-        /*
+        
         val lrs = v_stmt.executeQuery("select c.concept_id_1 as concept_id_1, c.concept_id_2 as concept_id_2, r.relationship_name as relationship_name from concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (select concept_id from concept where vocabulary_id = 6) and c.concept_id_2 in (select concept_id from concept where vocabulary_id = 6) and c.concept_id_1 != c.concept_id_2;")
         val loinc_relation_data: MutableList[ConceptRelation] = MutableList()
         while (lrs.next()) 
@@ -273,7 +274,7 @@ object Main {
         }
         val loinc_relations = sc.parallelize(loinc_relation_data)
         println("loinc R", loinc_relations.count)
-        */
+        
         //Snomed
         val sds = v_stmt.executeQuery("SELECT concept_id, concept_name, concept_code FROM concept WHERE vocabulary_id = 1;")
         val snomed_data: MutableList[Vocabulary] = MutableList()
@@ -282,8 +283,8 @@ object Main {
             snomed_data += Vocabulary(sds.getInt("concept_id"), sds.getString("concept_name"), sds.getString("concept_code"))
         }
         val snomed = sc.parallelize(snomed_data)
-        //println("Snomed", snomed.count)
-        /*
+        println("Snomed", snomed.count)
+        
         val sas = v_stmt.executeQuery("SELECT ancestor_concept_id, descendant_concept_id FROM concept_ancestor WHERE ancestor_concept_id IN (select concept_id from concept where vocabulary_id = 1) AND descendant_concept_id IN (select concept_id from concept where vocabulary_id = 1) AND descendant_concept_id != ancestor_concept_id;")
         val snomed_ancestor_data: MutableList[ConceptAncestor] = MutableList()
         while (sas.next()) 
@@ -301,12 +302,12 @@ object Main {
         }
         val snomed_relations = sc.parallelize(snomed_relation_data)
         println("Snomed R", snomed_relations.count)
-        */
+        /*
         val snomed_ancestors=null
         val rxnorm_ancestors=null
         val snomed_relations=null
         val rxnorm_relations=null
-        val loinc_relations=null
+        val loinc_relations=null*/
         (rxnorm, loinc, snomed,snomed_ancestors, rxnorm_ancestors, snomed_relations, rxnorm_relations, loinc_relations)
     }
 
