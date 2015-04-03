@@ -12,7 +12,7 @@ import org.apache.spark.SparkContext._
 
 object RandomWalk 
 {  
-  def knnAllVsAll(graph: Graph[VertexProperty, EdgeProperty], patientID: String , numIter: Int = 10, alpha: Double = 0.15): List[String] = 
+  def knnAllVsAll(graph: Graph[VertexProperty, EdgeProperty], patientID: String , numIter: Int = 10, alpha: Double = 0.15): Double = 
   {
     //compute ready state probabilities between patient patientID (NOT VERTEX ID) and all other patients and return the top 10 similar patients
      // Initialize the PageRank graph with each edge attribute having
