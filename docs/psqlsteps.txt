@@ -1,0 +1,11 @@
+sudo apt-get install postgresql postgresql-client postgresql-contrib
+
+sudo service postgresql start
+
+sudo -u postgres createuser sneha
+
+sudo su - postgres
+
+createdb -O sneha omop_vocabulary_v4
+
+psql -U sneha -d omop_vocabulary_v4 -f kingsman\data\dump\vocab.sql

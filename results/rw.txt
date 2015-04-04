@@ -1,0 +1,19 @@
+[0m[[0minfo[0m] [0mLoading project definition from /Users/rhea/Documents/Spring2015/BDH8803/Project/project[0m
+[0m[[0minfo[0m] [0mSet current project to cse8803_project_template (in build file:/Users/rhea/Documents/Spring2015/BDH8803/Project/)[0m
+[0m[[0minfo[0m] [0mCompiling 1 Scala source to /Users/rhea/Documents/Spring2015/BDH8803/Project/target/scala-2.10/classes...[0m
+[0m[[0minfo[0m] [0mRunning edu.gatech.cse8803.main.Main [0m
+(rxnorm,222828)
+(loinc,73889)
+(all vertices3: ,734953)
+(all edges3: ,2059298)
+(-94314701,8.884710041499378E-5)
+(-9300708901,8.788475910909412E-5)
+(-24639401,8.745158674635905E-5)
+(-61798701,8.742657379444879E-5)
+(-95184000001,8.722333849136456E-5)
+(-55800986901,8.69069589198027E-5)
+(-66672745601,8.685315373025516E-5)
+(-68100342701,8.662716608713367E-5)
+(-66692763101,8.65745185279728E-5)
+(-89800702802,8.656801151519397E-5)
+[0m[[32msuccess[0m] [0mTotal time: 1429 s, completed Mar 24, 2015 12:49:36 AM[0m
