@@ -3,6 +3,7 @@ package edu.gatech.cse8803.randomwalk
  * @author rchen
  */
 /**
+
 students: please put your implementation in this file!
   **/
 
@@ -56,15 +57,56 @@ object RandomWalk {
     }
 
     //val maxPatientVertexID = graph.vertices.filter { case (id, vertex) => vertex.isInstanceOf[PatientProperty]}.map(f=>f._2.asInstanceOf[PatientProperty].patientID).toArray.maxBy(f=>f.toLong).toLong
-    val top10 = rankGraph.vertices.filter(x=> ((x._1 <= 0)&& x._1!=patientID.toLong)).top(10) 
-    {
+    val top10 = rankGraph.vertices.filter(x=> ((x._1 <= 0)&& x._1!=patientID.toLong)).top(10) {
         Ordering.by((entry: (VertexId, Double)) => entry._2)
     }.toList
     //.map(x=>(x._1.toString)).toList
 
-
+    //l.foreach(println)
 
     top10.foreach(println)
     null
   }
+/*
+  def summarize(graph: Graph[VertexProperty, EdgeProperty], patientIDs: List[String] ): (List[String], List[String], List[String])  = {
+
+   val patientRelatedEdges = graph.triplets.filter(t=>(patientIDs.contains(t.srcId.toString))).cache()
+    
+    //patientRelatedEdges.foreach(println)
+    val lab  = patientRelatedEdges.filter(x=>x.dstAttr.isInstanceOf[LabResultProperty]).map(x=>(x.dstAttr.asInstanceOf[LabResultProperty].testName.toString->1)).reduceByKey(_+_)
+    val medication  = patientRelatedEdges.filter(x=>x.dstAttr.isInstanceOf[MedicationProperty]).map(x=>(x.dstAttr.asInstanceOf[MedicationProperty].medicine->1)).reduceByKey(_+_)
+    val diagnostics  = patientRelatedEdges.filter(x=>x.dstAttr.isInstanceOf[DiagnosticProperty]).map(x=>(x.dstAttr.asInstanceOf[DiagnosticProperty].icd9code->1)).reduceByKey(_+_)
+    
+    //replace top_diagnosis with the most frequently used diagnosis in the top most similar patients
+    //must contains ICD9 codes
+    //val top_diagnoses = List("ICD9-1" , "ICD9-2", "ICD9-3", "ICD9-4", "ICD9-5")
+    val top_diagnoses = diagnostics.top(5) {
+        Ordering.by((entry: (String, Int)) => entry._2)
+    }.map(x=>x._1.toString).toList
+
+    //replace top_medications with the most frequently used medications in the top most similar patients
+    //must contain medication name
+    //val top_medications = List("med_name1" , "med_name2", "med_name3", "med_name4", "med_name5")
+    val top_medications = medication.top(5) {
+        Ordering.by((entry: (String, Int)) => entry._2)
+    }.map(x=>x._1).toList
+    
+    //replace top_labs with the most frequently used labs in the top most similar patients
+    //must contain test name
+    val top_labs = lab.top(5) {
+        Ordering.by((entry: (String, Int)) => entry._2)
+    }.map(x=>x._1).toList
+
+    /*println(patientRelatedEdges.count)
+    val temp = patientRelatedEdges.map(x=> x.dstAttr match{
+        case a: LabResultProperty => "L"->x.dstId
+        case b: MedicationProperty => "M" -> x.dstId
+        case c: DiagnosticProperty => "D"->x.dstId
+        }).groupByKey()
+    val lab = temp.lookup("L")(0).toList.map(x=>(x->1)).groupBy(_._1).mapValues(_.size)*/
+
+    //val top_labs = List("test_name1" , "test_name2", "test_name3", "test_name4", "test_name5")
+    (top_medications, top_diagnoses, top_labs)
+  }
+  */
 }
