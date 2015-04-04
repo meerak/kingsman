@@ -66,7 +66,7 @@ object Main {
     //val patientIDtoLookup = "-87907000001"
     //val patientIDtoLookup = "-94169102" //dead
     //val knnanswer = KNN.knnAllVsAll(graphInput, patientIDtoLookup)
-    val knnanswer = graphInput.vertices.map(x => (x._1, x._2.asInstanceOf[PatientProperty].dead, KNN.knnAllVsAll(graphInput, x._1.toString)))
+    val knnanswer = graphInput.vertices.filter(t=>(t._1<0)).map(x => (x._1, x._2.asInstanceOf[PatientProperty].dead, KNN.knnAllVsAll(graphInput, x._1.toString)))
     knnanswer.repartition(1).saveAsTextFile("knn.txt")
     //println("KNN answer", knnanswer)
   }

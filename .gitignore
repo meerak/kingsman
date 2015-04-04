@@ -1,5 +1,4 @@
 project/*
-project/target/*
+project/target/**
 target/*
-python PR.py <sample-input-file.txt> <sample-output-file.txt>
 data/*
