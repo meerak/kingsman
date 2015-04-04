@@ -2,8 +2,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import metrics
 from sklearn.metrics import roc_curve, auc
-y = np.array([1, 1, 0, 0])
-pred = np.array([0, 0, 1, 1])
+
+y = []
+pred = []
+f = open('auc.txt', 'r')
+for line in f:
+    y.append(int(line[1]))
+    pred.append(float(line[3:-2]))
+    
+y = np.array(y)
+pred = np.array(pred)
+
+print y
+print pred
 
 fpr, tpr, _ = roc_curve(y, pred)
 roc_auc = auc(fpr, tpr)
@@ -19,3 +30,4 @@ plt.ylabel('True Positive Rate')
 plt.title('Receiver operating characteristic')
 plt.legend(loc="lower right")
 plt.show()
+
