@@ -16,11 +16,14 @@ import org.apache.spark.rdd.JdbcRDD
 import java.sql.{Connection, DriverManager, ResultSet}
 import org.postgresql.Driver
 import scala.io.Source
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import scala.collection.mutable.MutableList
 
 
 object Main {
+    private val LOG = LoggerFactory.getLogger(getClass())
 
     def main(args: Array[String]) {
         val sc = createContext
@@ -31,19 +34,28 @@ object Main {
 
         /** initialize loading of data */
         //loadRddRawData2(sqlContext, conf);
+        var startTime = System.currentTimeMillis();
+        LOG.info("Load data from database into RDD")
+        
         val (patient, medication, labResult, diagnostic) = loadRddRawData(sc, sqlContext, conf)
-
         val (rxnorm, loinc, snomed, snomed_ancestors, rxnorm_ancestors, snomed_relations, rxnorm_relations, loinc_relations) = loadRddRawDataVocab(sc, sqlContext, conf)
+
+        var endTime = System.currentTimeMillis();
+        LOG.info(s"Data loaded in ${endTime - startTime} ms")
 
         /** build the graph */
         val graph = GraphLoader.load(patient, medication, labResult, diagnostic, rxnorm, loinc, snomed, snomed_ancestors, rxnorm_ancestors, snomed_relations, rxnorm_relations, loinc_relations)
-        
+    
         //compute pagerank
-        testKNN(graph)
+        //testKNN(graph)
         
         //Jaccard using only diagnosis
-        //testCosine(graph, 1, 0, 0)
-        
+        startTime = System.currentTimeMillis();
+        LOG.info("Compute cosine similarity")
+        testCosine(graph, 1, 0, 0)
+        endTime = System.currentTimeMillis();
+        LOG.info(s"Cosine similarity calculated in ${endTime - startTime} ms")
+
         //Weighted Jaccard
         //testJaccard(graph, 0.5, 0.3, 0.2)
 

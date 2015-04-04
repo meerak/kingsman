@@ -5,10 +5,16 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
 import edu.gatech.cse8803.enums._
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 object GraphLoader {
+    private val LOG = LoggerFactory.getLogger(getClass())
   def load(patients: RDD[PatientProperty], medications: RDD[Medication], labResults:RDD[Observation], diagnostics: RDD[Diagnostic], rxnorm:RDD[Vocabulary], loinc: RDD[Vocabulary], snomed:RDD[Vocabulary], snomed_ancestors:RDD[ConceptAncestor], rxnorm_ancestors:RDD[ConceptAncestor], snomed_relations:RDD[ConceptRelation], rxnorm_relations:RDD[ConceptRelation], loinc_relations:RDD[ConceptRelation]): Graph[VertexProperty, EdgeProperty] = {
 
+    val startTime = System.currentTimeMillis();
+    LOG.info("Building graph")
+        
     val patientVertices: RDD[(VertexId, VertexProperty)] = patients.map(p => ((-p.person_id).toLong, p))
     
     val loincVertices: RDD[(VertexId, VertexProperty)] = loinc.map(a=>(a.concept_id.toLong, ObservationProperty(a.concept_id)))
@@ -41,6 +47,9 @@ object GraphLoader {
     println("all vertices 1 : ", graph.vertices.count)
     println("all edges 1: ", graph.edges.count)
     
+    val endTime = System.currentTimeMillis();
+    LOG.info("Graph built in " + (endTime - startTime) + "ms")
+
     graph
   }
   
