@@ -89,7 +89,7 @@ object CosineSimilarity {
     var similar_patients_list = List[String]()
     for(i <- top_10_patients) {
       similar_patients_list = similar_patients_list :+ i._1.toString
-      println("Patient: " + i._1 +"Cosine: " + i._2)
+      //println("Patient: " + i._1 +"Cosine: " + i._2)
     }
 
     similar_patients_list
