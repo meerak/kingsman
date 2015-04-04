@@ -1,7 +1,0 @@
-1. Dump OMOP db
-2. Create AWS instance
-3. Install Postgres on instance
-4. Access data from AWS
-5. Add Relation data to SNOMED
-6. Similarity measure check
-7. 
