@@ -1,0 +1,45 @@
+sudo useradd rhea
+sudo passwd rhea
+
+sudo yum install postgresql postgresql-server
+sudo service postgresql initdb
+
+sudo su postgres 
+cd /var/lib/pgsql9
+vim pg_hba.conf 
+local   all         all                                  trust
+host    all         all         0.0.0.0/0          md5
+
+sudo service postgresql start
+
+
+scp -i ~/rheahome/DVASpring15/HW3/cse6242-mkamath6-keypair.pem exact.sql hadoop@ec2-54-68-220-117.us-west-2.compute.amazonaws.com:/home/hadoop/data
+
+scp -i ~/rheahome/DVASpring15/HW3/cse6242-mkamath6-keypair.pem vocab.sql hadoop@ec2-54-68-220-117.us-west-2.compute.amazonaws.com:/home/hadoop/data
+
+
+sudo su -postgres
+createdb vocab
+createdb exact
+psql -d vocab
+
+vocab=# CREATE USER rhea with password 'cuckoo99';
+CREATE ROLE
+vocab=# GRANT ALL PRIVILEGES ON DATABASE vocab to rhea;
+GRANT
+
+psql -d exact
+GRANT ALL PRIVILEGES ON DATABASE exact to rhea;
+\q
+
+exit
+
+psql -d exact -f exact.sql -U rhea
+
+
+scp -i ~/rheahome/DVASpring15/HW3/cse6242-mkamath6-keypair.pem -r src hadoop@ec2-54-68-220-117.us-west-2.compute.amazonaws.com:/home/hadoop/code
+scp -i ~/rheahome/DVASpring15/HW3/cse6242-mkamath6-keypair.pem -r sbt hadoop@ec2-54-68-220-117.us-west-2.compute.amazonaws.com:/home/hadoop/code
+scp -i ~/rheahome/DVASpring15/HW3/cse6242-mkamath6-keypair.pem build.sbt hadoop@ec2-54-68-220-117.us-west-2.compute.amazonaws.com:/home/hadoop/code
+scp -i ~/rheahome/DVASpring15/HW3/cse6242-mkamath6-keypair.pem project/build.properties hadoop@ec2-54-68-220-117.us-west-2.compute.amazonaws.com:/home/hadoop/code/project
+scp -i ~/rheahome/DVASpring15/HW3/cse6242-mkamath6-keypair.pem project/plugins.sbt hadoop@ec2-54-68-220-117.us-west-2.compute.amazonaws.com:/home/hadoop/code/project
+
