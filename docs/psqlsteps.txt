@@ -9,3 +9,19 @@ sudo su - postgres
 createdb -O sneha omop_vocabulary_v4
 
 psql -U sneha -d omop_vocabulary_v4 -f kingsman\data\dump\vocab.sql
+
+
+//EMR
+sudo adduser sneha
+
+http://equivalence.co.uk/archives/1521
+sudo visudo 
+sneha ALL=(ALL) ALL
+sneha ALL=NOPASSWD: ALL
+
+sudo su - sneha
+
+cd ../hadoop
+
+psql -U sneha -d omop_v4_exactdata -f kingsman/dump/exact.sql
+
