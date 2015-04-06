@@ -42,7 +42,7 @@ object Main {
         var startTime = System.currentTimeMillis();
         LOG.info("Load data from database into RDD")
         
-        val patient = loadRddRawDataPat2(sqlContext, conf)
+        /*val patient = loadRddRawDataPat2(sqlContext, conf)
         val medication = loadRddRawDataMed2( sqlContext, conf)
         val diagnostic = loadRddRawDataDiag2( sqlContext, conf)
         val labResult = loadRddRawDataLab2(sqlContext, conf)
@@ -57,8 +57,23 @@ object Main {
         val race_ancestors = loadRddRawDataRaceAncestor(sqlContext, conf)
         val loinc = loadRddRawDataLoinc(sqlContext, conf)
 
-        val gender = loadRddRawDataGender(sqlContext, conf)
+        val gender = loadRddRawDataGender(sqlContext, conf)*/
+        val patient = loadRddRawDataPat2(sqlContext, conf)
+        val medication = loadRddRawDataMed2( sqlContext, conf)
+        val diagnostic = loadRddRawDataDiag2( sqlContext, conf)
+        val labResult = loadRddRawDataLab2(sqlContext, conf)
 
+        val rxnorm = loadRddRawDataVocabRxnorm(sc, sqlContext, conf)
+        val rxnorm_ancestors = loadRddRawDataVocabRxnormA( sc, sqlContext, conf)
+
+        val snomed = loadRddRawDataVocabSnomed(sc, sqlContext, conf)
+        val snomed_ancestors = loadRddRawDataVocabSnomedA( sc, sqlContext, conf)
+
+        val race = loadRddRawDataRace(sqlContext, conf)
+        val race_ancestors = loadRddRawDataRaceAncestor(sqlContext, conf)
+        val loinc = loadRddRawDataVocabLoinc(sc, sqlContext, conf)
+
+        val gender = loadRddRawDataGender(sqlContext, conf)
         val age = loadRddRawDataAge(sc)
 
         var endTime = System.currentTimeMillis()
@@ -518,6 +533,128 @@ def loadRddRawDataRxNorm(sqlContext: SQLContext, conf:Config): RDD[Vocabulary] =
 
         (patients, medication, labResults, diagnostics)
     } 
+
+    def loadRddRawDataVocabRxnorm(sc: SparkContext,sqlContext: SQLContext, conf:Config): RDD[Vocabulary]= {
+        val v_connection = Datasource.connectServer(conf, conf.getString("db-setting.database_vocab"))
+        val v_stmt = v_connection.getConnection.createStatement()
+
+        //RxNorm
+        val rds = v_stmt.executeQuery("SELECT concept_id, concept_name, concept_code FROM concept WHERE vocabulary_id = 8;")
+        val rxnorm_data: MutableList[Vocabulary] = MutableList()
+        while (rds.next()) 
+        {
+            rxnorm_data += Vocabulary(rds.getInt("concept_id"), rds.getString("concept_name"), rds.getString("concept_code"))
+        }
+        val rxnorm = sc.parallelize(rxnorm_data)
+        println("rxnorm", rxnorm.count)
+        rxnorm
+    }
+    def loadRddRawDataVocabRxnormA(sc: SparkContext,sqlContext: SQLContext, conf:Config): RDD[ConceptAncestor]= {
+        val v_connection = Datasource.connectServer(conf, conf.getString("db-setting.database_vocab"))
+        val v_stmt = v_connection.getConnection.createStatement()
+
+        val ras = v_stmt.executeQuery("SELECT ancestor_concept_id, descendant_concept_id FROM concept_ancestor WHERE ancestor_concept_id IN (select concept_id from concept where vocabulary_id = 8) AND descendant_concept_id IN (select concept_id from concept where vocabulary_id = 8) AND descendant_concept_id != ancestor_concept_id;")
+        val rxnorm_ancestor_data: MutableList[ConceptAncestor] = MutableList()
+        while (ras.next()) 
+        {
+            rxnorm_ancestor_data += ConceptAncestor(ras.getInt("ancestor_concept_id"), ras.getInt("descendant_concept_id"))
+        }
+        val rxnorm_ancestors = sc.parallelize(rxnorm_ancestor_data)
+        println("rxnorm A", rxnorm_ancestors.count)
+        rxnorm_ancestors
+    }
+    def loadRddRawDataVocabRxnormR(sc: SparkContext,sqlContext: SQLContext, conf:Config): RDD[ConceptRelation] = {
+        val v_connection = Datasource.connectServer(conf, conf.getString("db-setting.database_vocab"))
+        val v_stmt = v_connection.getConnection.createStatement()
+
+        val rrs = v_stmt.executeQuery("select c.concept_id_1 as concept_id_1, c.concept_id_2 as concept_id_2, r.relationship_name as relationship_name from concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (select concept_id from concept where vocabulary_id = 8) and c.concept_id_2 in (select concept_id from concept where vocabulary_id = 8) and c.concept_id_1 != c.concept_id_2;")
+        val rxnorm_relation_data: MutableList[ConceptRelation] = MutableList()
+        while (rrs.next()) 
+        {
+            rxnorm_relation_data += ConceptRelation(rrs.getInt("concept_id_1"), rrs.getInt("concept_id_2"), rrs.getString("relationship_name"))
+        }
+        val rxnorm_relations = sc.parallelize(rxnorm_relation_data)
+        println("rxnorm R", rxnorm_relations.count)
+        rxnorm_relations
+    }
+    def loadRddRawDataVocabLoinc(sc: SparkContext,sqlContext: SQLContext, conf:Config): RDD[Vocabulary] = {
+        val v_connection = Datasource.connectServer(conf, conf.getString("db-setting.database_vocab"))
+        val v_stmt = v_connection.getConnection.createStatement()
+
+        //Loinc
+        val lds = v_stmt.executeQuery("SELECT concept_id, concept_name, concept_code FROM concept WHERE vocabulary_id = 6;")
+        val loinc_data: MutableList[Vocabulary] = MutableList()
+        while (lds.next()) 
+        {
+            loinc_data += Vocabulary(lds.getInt("concept_id"), lds.getString("concept_name"), lds.getString("concept_code"))
+        }
+        val loinc = sc.parallelize(loinc_data)
+        println("loinc", loinc.count)
+        loinc
+    }
+    def loadRddRawDataVocabLoincR(sc: SparkContext,sqlContext: SQLContext, conf:Config): RDD[ConceptRelation] = {
+        val v_connection = Datasource.connectServer(conf, conf.getString("db-setting.database_vocab"))
+        val v_stmt = v_connection.getConnection.createStatement()
+
+        val lrs = v_stmt.executeQuery("select c.concept_id_1 as concept_id_1, c.concept_id_2 as concept_id_2, r.relationship_name as relationship_name from concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (select concept_id from concept where vocabulary_id = 6) and c.concept_id_2 in (select concept_id from concept where vocabulary_id = 6) and c.concept_id_1 != c.concept_id_2;")
+        val loinc_relation_data: MutableList[ConceptRelation] = MutableList()
+        while (lrs.next()) 
+        {
+            loinc_relation_data += ConceptRelation(lrs.getInt("concept_id_1"), lrs.getInt("concept_id_2"), lrs.getString("relationship_name"))
+        }
+        val loinc_relations = sc.parallelize(loinc_relation_data)
+        println("loinc R", loinc_relations.count)
+        loinc_relations
+    }
+    def loadRddRawDataVocabSnomed(sc: SparkContext,sqlContext: SQLContext, conf:Config): RDD[Vocabulary]= {
+        val v_connection = Datasource.connectServer(conf, conf.getString("db-setting.database_vocab"))
+        val v_stmt = v_connection.getConnection.createStatement()
+
+        //Snomed
+        val sds = v_stmt.executeQuery("SELECT concept_id, concept_name, concept_code FROM concept WHERE vocabulary_id = 1;")
+        val snomed_data: MutableList[Vocabulary] = MutableList()
+        while (sds.next()) 
+        {
+            snomed_data += Vocabulary(sds.getInt("concept_id"), sds.getString("concept_name"), sds.getString("concept_code"))
+        }
+        val snomed = sc.parallelize(snomed_data)
+        println("Snomed", snomed.count)
+        snomed
+    }
+    def loadRddRawDataVocabSnomedA(sc: SparkContext,sqlContext: SQLContext, conf:Config): RDD[ConceptAncestor]= {
+        val v_connection = Datasource.connectServer(conf, conf.getString("db-setting.database_vocab"))
+        val v_stmt = v_connection.getConnection.createStatement()
+
+        val sas = v_stmt.executeQuery("SELECT ancestor_concept_id, descendant_concept_id FROM concept_ancestor WHERE ancestor_concept_id IN (select concept_id from concept where vocabulary_id = 1) AND descendant_concept_id IN (select concept_id from concept where vocabulary_id = 1) AND descendant_concept_id != ancestor_concept_id;")
+        val snomed_ancestor_data: MutableList[ConceptAncestor] = MutableList()
+        while (sas.next()) 
+        {
+            snomed_ancestor_data += ConceptAncestor(sas.getInt("ancestor_concept_id"), sas.getInt("descendant_concept_id"))
+        }
+        val snomed_ancestors = sc.parallelize(snomed_ancestor_data)
+        println("Snomed A", snomed_ancestors.count)
+    }
+    def loadRddRawDataVocabSnomedR(sc: SparkContext,sqlContext: SQLContext, conf:Config): RDD[ConceptRelation]= {
+        val v_connection = Datasource.connectServer(conf, conf.getString("db-setting.database_vocab"))
+        val v_stmt = v_connection.getConnection.createStatement()
+
+        val srs = v_stmt.executeQuery("select c.concept_id_1 as concept_id_1, c.concept_id_2 as concept_id_2, r.relationship_name as relationship_name from concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (select concept_id from concept where vocabulary_id = 1) and c.concept_id_2 in (select concept_id from concept where vocabulary_id = 1) and c.concept_id_1 != c.concept_id_2;")
+        val snomed_relation_data: MutableList[ConceptRelation] = MutableList()
+        while (srs.next()) 
+        {
+            snomed_relation_data += ConceptRelation(srs.getInt("concept_id_1"), srs.getInt("concept_id_2"), srs.getString("relationship_name"))
+        }
+        val snomed_relations = sc.parallelize(snomed_relation_data)
+        println("Snomed R", snomed_relations.count)
+        /*
+        val snomed_ancestors=null
+        val rxnorm_ancestors=null
+        val snomed_relations=null
+        val rxnorm_relations=null
+        val loinc_relations=null*/
+        snomed_relations
+    }
+
     /*
     def loadRddRawDataLoincRelation(sc: SparkContext,sqlContext: SQLContext, conf:Config): RDD[ConceptRelation] = 
     {
