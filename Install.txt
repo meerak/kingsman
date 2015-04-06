@@ -50,6 +50,34 @@ scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem build.sbt hadoop@ec
 scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem project/build.properties hadoop@ec2-54-68-123-95.us-west-2.compute.amazonaws.com:/home/hadoop/code/project
 scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem project/plugins.sbt hadoop@ec2-54-68-123-95.us-west-2.compute.amazonaws.com:/home/hadoop/code/project
 
+FOR EMR CLUSTER - POSTGRES:
+
+place jar in /hadoop/code
+
+change build sbt to use this jar version
+
+change incoming port in security groups to accept 5432 on EMR cluster
+
+sudo su - postgres
+cd ..
+cd pgsql9
+cd data
+vim postgresql.conf
+listen_addresses = '*' 
+port = 5432
+
+vim pg_hba.conf
+(1st part)
+# IPv4 local connections:
+host    all             all             0.0.0.0/0               md5
+
+change host in application.conf in resource to use master's ip address
+
+sudo service postgresql start -p 5432
+
+./spark-submit --class edu.gatech.cse8803.main.Main --master yarn-client --driver-memory 5G --executor-memory 2G --jars /home/hadoop/code/postgresql-9.3-1103.jdbc41.jar /home/hadoop/code/target/scala-2.10/cse8803_project_template-assembly-1.0.jar
+
+
 
 ********extra******
 mkdir temp_loc
