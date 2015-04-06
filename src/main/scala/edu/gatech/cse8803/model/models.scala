@@ -12,6 +12,12 @@ case class Diagnostic(condition_occurrence_id: Integer, person_id: Long, conditi
 
 case class Medication(drug_exposure_id: Integer, person_id: Long, drug_concept_id: Integer, drug_exposure_start_date: String, drug_exposure_end_date: String, drug_type_concept_id: Integer, stop_reason: String, refills: Integer, quantity: Integer, days_supply: Integer, sig: String, prescribing_provider_id: Integer, visit_occurrence_id: BigDecimal, relevant_condition_concept_id: Integer, drug_source_value: String)
 
+case class Gender(person_id: Long, gender_concept_id: Integer)
+
+case class Race(person_id: Long, race_concept_id: Integer)
+
+case class Age(person_id: Long, age_range: Integer)
+
 case class ConceptAncestor(ancestor_concept_id:Integer, descendent_concept_id:Integer)
 
 case class ConceptRelation(source:Integer, dest:Integer, relation:String)
@@ -28,6 +34,12 @@ case class DiagnosticProperty(condition_concept_id: Integer) extends VertexPrope
 
 case class MedicationProperty(drug_concept_id: Integer) extends VertexProperty
 
+case class GenderProperty(gender_concept_id: Integer) extends VertexProperty
+
+case class AgeProperty(age_range: Integer) extends VertexProperty
+
+case class RaceProperty(race_concept_id: Integer) extends VertexProperty
+
 case class VocabularyProperty(concept_id: Integer) extends VertexProperty
 
 abstract class EdgeProperty
@@ -39,6 +51,12 @@ case class PatientObservationProperty(observation: Observation) extends EdgeProp
 case class PatientDiagnosticEdgeProperty(diagnostic: Diagnostic) extends EdgeProperty
 
 case class PatientMedicationEdgeProperty(medication: Medication) extends EdgeProperty
+
+case class PatientGenderEdgeProperty(gender: Gender) extends EdgeProperty
+
+case class PatientAgeEdgeProperty(age: Age) extends EdgeProperty
+
+case class PatientRaceEdgeProperty(race: Race) extends EdgeProperty
 
 case class ConceptAncestorEdgeProperty(relation: Enumerations.Relation) extends EdgeProperty
 
