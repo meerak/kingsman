@@ -49,7 +49,7 @@ object RandomWalk {
         (id, oldRank, msgSum) => (1.0 - alpha) * msgSum + alpha*(if(id==patientID.toLong) 1.0 else 0.0)
       }.cache()
 
-      //rankGraph.edges.foreachPartition(x => {}) // also materializes rankGraph.vertices
+      rankGraph.edges.foreachPartition(x => {}) // also materializes rankGraph.vertices
       prevRankGraph.vertices.unpersist(false)
       prevRankGraph.edges.unpersist(false)
 

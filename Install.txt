@@ -1,3 +1,5 @@
+s3://support.elasticmapreduce/spark/install-spark
+
 sudo useradd rhea
 sudo passwd rhea
 
@@ -5,20 +7,21 @@ sudo yum install postgresql postgresql-server
 sudo service postgresql initdb
 
 sudo su postgres 
-cd /var/lib/pgsql9
+cd /var/lib/pgsql9/data
 vim pg_hba.conf 
 local   all         all                                  trust
 host    all         all         0.0.0.0/0          md5
 
+exit
 sudo service postgresql start
 
+mkdir data
+scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem exact.sql hadoop@ec2-54-69-115-239.us-west-2.compute.amazonaws.com:/home/hadoop/data
 
-scp -i ~/rheahome/DVASpring15/HW3/cse6242-mkamath6-keypair.pem exact.sql hadoop@ec2-54-68-220-117.us-west-2.compute.amazonaws.com:/home/hadoop/data
-
-scp -i ~/rheahome/DVASpring15/HW3/cse6242-mkamath6-keypair.pem vocab.sql hadoop@ec2-54-68-220-117.us-west-2.compute.amazonaws.com:/home/hadoop/data
+scp -i ~/rheahome/DVASpring15/HW3/cse6242-mkamath6-keypair.pem vocab.sql hadoop@ec2-54-69-115-239.us-west-2.compute.amazonaws.com:/home/hadoop/data
 
 
-sudo su -postgres
+sudo su postgres
 createdb vocab
 createdb exact
 psql -d vocab
@@ -27,6 +30,7 @@ vocab=# CREATE USER rhea with password 'cuckoo99';
 CREATE ROLE
 vocab=# GRANT ALL PRIVILEGES ON DATABASE vocab to rhea;
 GRANT
+\q
 
 psql -d exact
 GRANT ALL PRIVILEGES ON DATABASE exact to rhea;
@@ -34,12 +38,28 @@ GRANT ALL PRIVILEGES ON DATABASE exact to rhea;
 
 exit
 
+cd data
 psql -d exact -f exact.sql -U rhea
+psql -d vocab -f vocab.sql -U rhea
 
-
-scp -i ~/rheahome/DVASpring15/HW3/cse6242-mkamath6-keypair.pem -r src hadoop@ec2-54-68-220-117.us-west-2.compute.amazonaws.com:/home/hadoop/code
+cd ../
+mkdir code
+scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem -r src hadoop@ec2-54-69-115-239.us-west-2.compute.amazonaws.com:/home/hadoop/code
 scp -i ~/rheahome/DVASpring15/HW3/cse6242-mkamath6-keypair.pem -r sbt hadoop@ec2-54-68-220-117.us-west-2.compute.amazonaws.com:/home/hadoop/code
 scp -i ~/rheahome/DVASpring15/HW3/cse6242-mkamath6-keypair.pem build.sbt hadoop@ec2-54-68-220-117.us-west-2.compute.amazonaws.com:/home/hadoop/code
 scp -i ~/rheahome/DVASpring15/HW3/cse6242-mkamath6-keypair.pem project/build.properties hadoop@ec2-54-68-220-117.us-west-2.compute.amazonaws.com:/home/hadoop/code/project
 scp -i ~/rheahome/DVASpring15/HW3/cse6242-mkamath6-keypair.pem project/plugins.sbt hadoop@ec2-54-68-220-117.us-west-2.compute.amazonaws.com:/home/hadoop/code/project
 
+scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem -r /Users/rhea/rheahome/Spring2015/BDH8803/Project/src/main/scala/edu/gatech/cse8803/main/Main2.scala hadoop@ec2-54-69-115-239.us-west-2.compute.amazonaws.com:/home/hadoop/code/src/main/scala/edu/gatech/cse8803/main/Main.scala
+
+
+mkdir temp_loc
+sudo chown postgres temp_loc
+
+CREATE TABLESPACE temp_disk2 LOCATION '/home/hadoop/temp_loc';
+GRANT CREATE ON TABLESPACE temp_disk2 to rhea;
+
+We then modify postgresql.conf to tell postgres to use this tablespace for temporary objects:
+
+1
+temp_tablespaces = 'ephemeral'
