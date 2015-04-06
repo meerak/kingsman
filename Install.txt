@@ -16,9 +16,9 @@ exit
 sudo service postgresql start
 
 mkdir data
-scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem exact.sql hadoop@ec2-54-69-115-239.us-west-2.compute.amazonaws.com:/home/hadoop/data
+scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem exact.sql hadoop@ec2-54-68-123-95.us-west-2.compute.amazonaws.com:/home/hadoop/data
 
-scp -i ~/rheahome/DVASpring15/HW3/cse6242-mkamath6-keypair.pem vocab.sql hadoop@ec2-54-69-115-239.us-west-2.compute.amazonaws.com:/home/hadoop/data
+scp -i ~/rheahome/DVASpring15/HW3/cse6242-mkamath6-keypair.pem vocab.sql hadoop@ec2-54-68-123-95.us-west-2.compute.amazonaws.com:/home/hadoop/data
 
 
 sudo su postgres
@@ -44,15 +44,14 @@ psql -d vocab -f vocab.sql -U rhea
 
 cd ../
 mkdir code
-scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem -r src hadoop@ec2-54-69-115-239.us-west-2.compute.amazonaws.com:/home/hadoop/code
-scp -i ~/rheahome/DVASpring15/HW3/cse6242-mkamath6-keypair.pem -r sbt hadoop@ec2-54-68-220-117.us-west-2.compute.amazonaws.com:/home/hadoop/code
-scp -i ~/rheahome/DVASpring15/HW3/cse6242-mkamath6-keypair.pem build.sbt hadoop@ec2-54-68-220-117.us-west-2.compute.amazonaws.com:/home/hadoop/code
-scp -i ~/rheahome/DVASpring15/HW3/cse6242-mkamath6-keypair.pem project/build.properties hadoop@ec2-54-68-220-117.us-west-2.compute.amazonaws.com:/home/hadoop/code/project
-scp -i ~/rheahome/DVASpring15/HW3/cse6242-mkamath6-keypair.pem project/plugins.sbt hadoop@ec2-54-68-220-117.us-west-2.compute.amazonaws.com:/home/hadoop/code/project
-
-scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem -r /Users/rhea/rheahome/Spring2015/BDH8803/Project/src/main/scala/edu/gatech/cse8803/main/Main2.scala hadoop@ec2-54-69-115-239.us-west-2.compute.amazonaws.com:/home/hadoop/code/src/main/scala/edu/gatech/cse8803/main/Main.scala
+scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem -r src hadoop@ec2-54-68-123-95.us-west-2.compute.amazonaws.com:/home/hadoop/code
+scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem -r sbt hadoop@ec2-54-68-123-95.us-west-2.compute.amazonaws.com:/home/hadoop/code
+scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem build.sbt hadoop@ec2-54-68-123-95.us-west-2.compute.amazonaws.com:/home/hadoop/code
+scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem project/build.properties hadoop@ec2-54-68-123-95.us-west-2.compute.amazonaws.com:/home/hadoop/code/project
+scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem project/plugins.sbt hadoop@ec2-54-68-123-95.us-west-2.compute.amazonaws.com:/home/hadoop/code/project
 
 
+********extra******
 mkdir temp_loc
 sudo chown postgres temp_loc
 
