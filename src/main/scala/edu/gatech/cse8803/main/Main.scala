@@ -42,10 +42,10 @@ object Main {
         var startTime = System.currentTimeMillis();
         LOG.info("Load data from database into RDD")
         
-        val patient = loadRddRawDataPat2(sqlContext, conf)
-        val medication = loadRddRawDataMed2( sqlContext, conf)
-        val diagnostic = loadRddRawDataDiag2( sqlContext, conf)
-        val labResult = loadRddRawDataLab2(sqlContext, conf)
+        val patient = loadRddRawDataPat2(sc, sqlContext, conf)
+        val medication = loadRddRawDataMed2(sc, sqlContext, conf)
+        val diagnostic = loadRddRawDataDiag2(sc, sqlContext, conf)
+        val labResult = loadRddRawDataLab2(sc, sqlContext, conf)
 
         val rxnorm = loadRddRawDataRxNorm( sqlContext, conf)
         val rxnorm_ancestors = loadRddRawDataRxNormAncestor( sqlContext, conf)
@@ -164,12 +164,13 @@ object Main {
         p.foreach(println)
     }
 
-      def loadRddRawDataLab2(sqlContext: SQLContext, conf:Config) = {
+ def loadRddRawDataLab2(sc: SparkContext, sqlContext: SQLContext, conf:Config) = {
         val dbname = conf.getString("db-setting.database")
         
         val connection = Datasource.connectServer(conf, dbname)
         val stmt = connection.getConnection.createStatement()
         
+        /*
         val rrs = stmt.executeQuery("select COUNT(*) as cnt from OBSERVATION")
         rrs.next()
         val rrs_count= rrs.getInt("cnt")
@@ -182,18 +183,29 @@ object Main {
             "SELECT * FROM observation OFFSET ? LIMIT ?;",
             0, rrs_count,1
             ,r=> (Observation(r.getInt("observation_id"), r.getLong("person_id"), r.getInt("observation_concept_id"), r.getString("observation_date"), r.getString("observation_time"), r.getFloat("value_as_number"), r.getString("value_as_string"), r.getInt("value_as_concept_id"), r.getInt("unit_concept_id"), r.getFloat("range_low"), r.getFloat("range_high"), r.getInt("observation_type_concept_id"), r.getInt("associated_provider_id"), 0, r.getInt("relevant_condition_concept_id"), r.getString("observation_source_value"), r.getString("units_source_value"))))
-        
-        println("observation count", observation.count)
-        observation
+        */
+
+        //Labresults
+        val ls = stmt.executeQuery("SELECT * FROM observation;")
+        val labs: MutableList[Observation] = MutableList()
+        while (ls.next()) 
+        {
+            labs ++= MutableList(Observation(ls.getInt("observation_id"), ls.getLong("person_id"), ls.getInt("observation_concept_id"), ls.getString("observation_date"), ls.getString("observation_time"), ls.getFloat("value_as_number"), ls.getString("value_as_string"), ls.getInt("value_as_concept_id"), ls.getInt("unit_concept_id"), ls.getFloat("range_low"), ls.getFloat("range_high"), ls.getInt("observation_type_concept_id"), ls.getInt("associated_provider_id"), ls.getBigDecimal("visit_occurrence_id"), ls.getInt("relevant_condition_concept_id"), ls.getString("observation_source_value"), ls.getString("units_source_value")))
+        }
+        val labResults = sc.parallelize(labs)
+
+        println("observation count", labResults.count)
+        labResults
         //println("Patients: ", patients.count)
     }
 
-    def loadRddRawDataPat2(sqlContext: SQLContext, conf:Config) = {
+    def loadRddRawDataPat2(sc: SparkContext, sqlContext: SQLContext, conf:Config) = {
         val dbname = conf.getString("db-setting.database")
         
         val connection = Datasource.connectServer(conf, dbname)
         val stmt = connection.getConnection.createStatement()
-    
+        
+        /*
         val rrs = stmt.executeQuery("select COUNT(*) as cnt from person as p left join death as d on p.person_id = d.person_id;")
         rrs.next()
         val rrs_count= rrs.getInt("cnt")
@@ -206,19 +218,28 @@ object Main {
             "SELECT p.*, d.death_date FROM person as p left join death as d on p.person_id = d.person_id OFFSET ? LIMIT ?;",
             0, rrs_count,1
             ,rs=> (PatientProperty(rs.getLong("person_id"), rs.getInt("gender_concept_id"), rs.getInt("year_of_birth"), rs.getInt("month_of_birth"), rs.getInt("day_of_birth"), rs.getInt("race_concept_id"), rs.getInt("ethnicity_concept_id"), rs.getInt("location_id"), rs.getInt("provider_id"), rs.getInt("care_site_id"), rs.getString("person_source_value"), rs.getString("gender_source_value"), rs.getString("race_source_value"), rs.getString("ethnicity_source_value"), if(rs.getString("death_date")!=null) 1 else 0 )))
-        
+        */
+        val rs = stmt.executeQuery("SELECT p.*, d.death_date FROM person as p left join death as d on p.person_id = d.person_id;")
+        val person: MutableList[PatientProperty] = MutableList()
+        while (rs.next()) 
+        {
+            person ++= MutableList(PatientProperty(rs.getLong("person_id"), rs.getInt("gender_concept_id"), rs.getInt("year_of_birth"), rs.getInt("month_of_birth"), rs.getInt("day_of_birth"), rs.getInt("race_concept_id"), rs.getInt("ethnicity_concept_id"), rs.getInt("location_id"), rs.getInt("provider_id"), rs.getInt("care_site_id"), rs.getString("person_source_value"), rs.getString("gender_source_value"), rs.getString("race_source_value"), rs.getString("ethnicity_source_value"), if(rs.getString("death_date")!=null) 1 else 0 ))
+        }
+        val patients = sc.parallelize(person)
+
         println("patient count", patients.count)
         connection.close()
         patients
         //println("Patients: ", patients.count)
     }
 
-    def loadRddRawDataDiag2(sqlContext: SQLContext, conf:Config) = {
+    def loadRddRawDataDiag2(sc: SparkContext, sqlContext: SQLContext, conf:Config) = {
         val dbname = conf.getString("db-setting.database")
         
         val connection = Datasource.connectServer(conf, dbname)
         val stmt = connection.getConnection.createStatement()
         
+        /*
         val rrs = stmt.executeQuery("select COUNT(*) as cnt from condition_occurrence")
         rrs.next()
         val rrs_count= rrs.getInt("cnt")
@@ -231,19 +252,30 @@ object Main {
             "SELECT * FROM condition_occurrence OFFSET ? LIMIT ?;",
             0, rrs_count,1
             ,ds=> (Diagnostic(ds.getInt("condition_occurrence_id"), ds.getLong("person_id"), ds.getInt("condition_concept_id"), ds.getString("condition_start_date"), ds.getString("condition_end_date"), ds.getInt("condition_type_concept_id"), ds.getString("stop_reason"), ds.getInt("associated_provider_id"), ds.getBigDecimal("visit_occurrence_id"), ds.getString("condition_source_value"))))
+        */
 
-        println("diagnostics", diag.count)
+        val ds = stmt.executeQuery("SELECT * FROM condition_occurrence;")
+        val diagnosis: MutableList[Diagnostic] = MutableList()
+        while (ds.next()) 
+        {
+            diagnosis ++= MutableList(Diagnostic(ds.getInt("condition_occurrence_id"), ds.getLong("person_id"), ds.getInt("condition_concept_id"), ds.getString("condition_start_date"), ds.getString("condition_end_date"), ds.getInt("condition_type_concept_id"), ds.getString("stop_reason"), ds.getInt("associated_provider_id"), ds.getBigDecimal("visit_occurrence_id"), ds.getString("condition_source_value")))
+        }
+        val diagnostics = sc.parallelize(diagnosis)
+        //println("Diagnostics", diagnostics.count)
+    
+        println("diagnostics", diagnostics.count)
         connection.close()
-        diag
+        diagnostics
         //println("Patients: ", patients.count)
     }
 
-    def loadRddRawDataMed2(sqlContext: SQLContext, conf:Config) = {
+    def loadRddRawDataMed2(sc: SparkContext, sqlContext: SQLContext, conf:Config) = {
         val dbname = conf.getString("db-setting.database")
         
         val connection = Datasource.connectServer(conf, dbname)
         val stmt = connection.getConnection.createStatement()
         
+        /*
         val rrs = stmt.executeQuery("select COUNT(*) as cnt from drug_exposure;")
         rrs.next()
         val rrs_count= rrs.getInt("cnt")
@@ -256,10 +288,21 @@ object Main {
             "SELECT * from drug_exposure OFFSET ? LIMIT ?;",
             0, rrs_count,1
             ,ms=> (Medication(ms.getInt("drug_exposure_id"), ms.getLong("person_id"), ms.getInt("drug_concept_id"), ms.getString("drug_exposure_start_date"), ms.getString("drug_exposure_end_date"), ms.getInt("drug_type_concept_id"), ms.getString("stop_reason"), ms.getInt("refills"), ms.getInt("quantity"), ms.getInt("days_supply"), ms.getString("sig"), ms.getInt("prescribing_provider_id"), ms.getBigDecimal("visit_occurrence_id"), ms.getInt("relevant_condition_concept_id"), ms.getString("drug_source_value"))))
+        */
+
+        //Medications
+        val ms = stmt.executeQuery("SELECT * FROM drug_exposure;")
+        val medicines: MutableList[Medication] = MutableList()
+        while (ms.next()) 
+        {
+            medicines ++= MutableList(Medication(ms.getInt("drug_exposure_id"), ms.getLong("person_id"), ms.getInt("drug_concept_id"), ms.getString("drug_exposure_start_date"), ms.getString("drug_exposure_end_date"), ms.getInt("drug_type_concept_id"), ms.getString("stop_reason"), ms.getInt("refills"), ms.getInt("quantity"), ms.getInt("days_supply"), ms.getString("sig"), ms.getInt("prescribing_provider_id"), ms.getBigDecimal("visit_occurrence_id"), ms.getInt("relevant_condition_concept_id"), ms.getString("drug_source_value")))
+        }
+        val medication = sc.parallelize(medicines)
+        //println("medication", medication.count)
         
-        println("medication count", med.count)
+        println("medication count", medication.count)
         connection.close()
-        med
+        medication
         //println("Patients: ", patients.count)
     }
 
