@@ -208,6 +208,7 @@ object Main {
             ,rs=> (PatientProperty(rs.getLong("person_id"), rs.getInt("gender_concept_id"), rs.getInt("year_of_birth"), rs.getInt("month_of_birth"), rs.getInt("day_of_birth"), rs.getInt("race_concept_id"), rs.getInt("ethnicity_concept_id"), rs.getInt("location_id"), rs.getInt("provider_id"), rs.getInt("care_site_id"), rs.getString("person_source_value"), rs.getString("gender_source_value"), rs.getString("race_source_value"), rs.getString("ethnicity_source_value"), if(rs.getString("death_date")!=null) 1 else 0 )))
         
         println("patient count", patients.count)
+        connection.close()
         patients
         //println("Patients: ", patients.count)
     }
@@ -232,6 +233,7 @@ object Main {
             ,ds=> (Diagnostic(ds.getInt("condition_occurrence_id"), ds.getLong("person_id"), ds.getInt("condition_concept_id"), ds.getString("condition_start_date"), ds.getString("condition_end_date"), ds.getInt("condition_type_concept_id"), ds.getString("stop_reason"), ds.getInt("associated_provider_id"), ds.getBigDecimal("visit_occurrence_id"), ds.getString("condition_source_value"))))
 
         println("diagnostics", diag.count)
+        connection.close()
         diag
         //println("Patients: ", patients.count)
     }
@@ -256,6 +258,7 @@ object Main {
             ,ms=> (Medication(ms.getInt("drug_exposure_id"), ms.getLong("person_id"), ms.getInt("drug_concept_id"), ms.getString("drug_exposure_start_date"), ms.getString("drug_exposure_end_date"), ms.getInt("drug_type_concept_id"), ms.getString("stop_reason"), ms.getInt("refills"), ms.getInt("quantity"), ms.getInt("days_supply"), ms.getString("sig"), ms.getInt("prescribing_provider_id"), ms.getBigDecimal("visit_occurrence_id"), ms.getInt("relevant_condition_concept_id"), ms.getString("drug_source_value"))))
         
         println("medication count", med.count)
+        connection.close()
         med
         //println("Patients: ", patients.count)
     }
@@ -280,7 +283,7 @@ def loadRddRawDataRxNorm(sqlContext: SQLContext, conf:Config): RDD[Vocabulary] =
             ,rds => (Vocabulary(rds.getInt("concept_id"), rds.getString("concept_name"), rds.getString("concept_code"))))
         
         println("rxnorm count", rxnorm.count)
-        
+        connection.close()
         rxnorm
     }
 
@@ -304,7 +307,7 @@ def loadRddRawDataRxNorm(sqlContext: SQLContext, conf:Config): RDD[Vocabulary] =
             ,ras => (ConceptAncestor(ras.getInt("ancestor_concept_id"), ras.getInt("descendant_concept_id"))))
         
         println("rxnorm ancestor count", rxnorm_ancestor.count)
-        
+        connection.close()
         rxnorm_ancestor
     }
 
@@ -328,7 +331,7 @@ def loadRddRawDataRxNorm(sqlContext: SQLContext, conf:Config): RDD[Vocabulary] =
             ,rds => (Vocabulary(rds.getInt("concept_id"), rds.getString("concept_name"), rds.getString("concept_code"))))
         
         println("snomed count", snomed.count)
-        
+        connection.close()
         snomed
     }
 
@@ -352,7 +355,7 @@ def loadRddRawDataRxNorm(sqlContext: SQLContext, conf:Config): RDD[Vocabulary] =
             ,ras => (ConceptAncestor(ras.getInt("ancestor_concept_id"), ras.getInt("descendant_concept_id"))))
         
         println("snomed ancestor count", snomed_ancestor.count)
-        
+        connection.close()
         snomed_ancestor
     }
 
@@ -376,7 +379,7 @@ def loadRddRawDataRxNorm(sqlContext: SQLContext, conf:Config): RDD[Vocabulary] =
             ,rds => (Vocabulary(rds.getInt("concept_id"), rds.getString("concept_name"), rds.getString("concept_code"))))
         
         println("loinc count", loinc.count)
-        
+        connection.close()
         loinc
     }
 
@@ -400,7 +403,7 @@ def loadRddRawDataRxNorm(sqlContext: SQLContext, conf:Config): RDD[Vocabulary] =
             ,rds => (Vocabulary(rds.getInt("concept_id"), rds.getString("concept_name"), rds.getString("concept_code"))))
         
         println("gender count", gender.count)
-        
+        connection.close()
         gender
     }
 
@@ -424,7 +427,7 @@ def loadRddRawDataRxNorm(sqlContext: SQLContext, conf:Config): RDD[Vocabulary] =
             ,rds => (Vocabulary(rds.getInt("concept_id"), rds.getString("concept_name"), rds.getString("concept_code"))))
         
         println("race count", race.count)
-        
+        connection.close()
         race
     }
 
@@ -448,7 +451,7 @@ def loadRddRawDataRxNorm(sqlContext: SQLContext, conf:Config): RDD[Vocabulary] =
             ,ras => (ConceptAncestor(ras.getInt("ancestor_concept_id"), ras.getInt("descendant_concept_id"))))
         
         println("race ancestor count", race_ancestor.count)
-        
+        connection.close()
         race_ancestor
     }
 
@@ -461,6 +464,60 @@ def loadRddRawDataRxNorm(sqlContext: SQLContext, conf:Config): RDD[Vocabulary] =
         age
     }
 
+    def loadRddRawData(sc: SparkContext,sqlContext: SQLContext, conf:Config): (RDD[PatientProperty], RDD[Medication], RDD[Observation], RDD[Diagnostic]) = {
+
+        // connect to datasource
+        val connection = Datasource.connectServer(conf, conf.getString("db-setting.database"))
+        val stmt = connection.getConnection.createStatement()
+        
+        // load Tables
+
+        //Person Table
+        val rs = stmt.executeQuery("SELECT p.*, d.death_date FROM person as p left join death as d on p.person_id = d.person_id;")
+        val person: MutableList[PatientProperty] = MutableList()
+        while (rs.next()) 
+        {
+            person ++= MutableList(PatientProperty(rs.getLong("person_id"), rs.getInt("gender_concept_id"), rs.getInt("year_of_birth"), rs.getInt("month_of_birth"), rs.getInt("day_of_birth"), rs.getInt("race_concept_id"), rs.getInt("ethnicity_concept_id"), rs.getInt("location_id"), rs.getInt("provider_id"), rs.getInt("care_site_id"), rs.getString("person_source_value"), rs.getString("gender_source_value"), rs.getString("race_source_value"), rs.getString("ethnicity_source_value"), if(rs.getString("death_date")!=null) 1 else 0 ))
+        }
+        val patients = sc.parallelize(person)
+        //println("Patients", patients.count)
+        
+        val patientVertices: RDD[(VertexId, VertexProperty)] = patients.map(p => ((-p.person_id).toLong, p))
+    
+        //Diagnostic
+        val ds = stmt.executeQuery("SELECT * FROM condition_occurrence;")
+        val diagnosis: MutableList[Diagnostic] = MutableList()
+        while (ds.next()) 
+        {
+            diagnosis ++= MutableList(Diagnostic(ds.getInt("condition_occurrence_id"), ds.getLong("person_id"), ds.getInt("condition_concept_id"), ds.getString("condition_start_date"), ds.getString("condition_end_date"), ds.getInt("condition_type_concept_id"), ds.getString("stop_reason"), ds.getInt("associated_provider_id"), ds.getBigDecimal("visit_occurrence_id"), ds.getString("condition_source_value")))
+        }
+        val diagnostics = sc.parallelize(diagnosis)
+        //println("Diagnostics", diagnostics.count)
+        
+        //Medications
+        val ms = stmt.executeQuery("SELECT * FROM drug_exposure;")
+        val medicines: MutableList[Medication] = MutableList()
+        while (ms.next()) 
+        {
+            medicines ++= MutableList(Medication(ms.getInt("drug_exposure_id"), ms.getLong("person_id"), ms.getInt("drug_concept_id"), ms.getString("drug_exposure_start_date"), ms.getString("drug_exposure_end_date"), ms.getInt("drug_type_concept_id"), ms.getString("stop_reason"), ms.getInt("refills"), ms.getInt("quantity"), ms.getInt("days_supply"), ms.getString("sig"), ms.getInt("prescribing_provider_id"), ms.getBigDecimal("visit_occurrence_id"), ms.getInt("relevant_condition_concept_id"), ms.getString("drug_source_value")))
+        }
+        val medication = sc.parallelize(medicines)
+        //println("medication", medication.count)
+        
+        //Labresults
+        val ls = stmt.executeQuery("SELECT * FROM observation;")
+        val labs: MutableList[Observation] = MutableList()
+        while (ls.next()) 
+        {
+            labs ++= MutableList(Observation(ls.getInt("observation_id"), ls.getLong("person_id"), ls.getInt("observation_concept_id"), ls.getString("observation_date"), ls.getString("observation_time"), ls.getFloat("value_as_number"), ls.getString("value_as_string"), ls.getInt("value_as_concept_id"), ls.getInt("unit_concept_id"), ls.getFloat("range_low"), ls.getFloat("range_high"), ls.getInt("observation_type_concept_id"), ls.getInt("associated_provider_id"), ls.getBigDecimal("visit_occurrence_id"), ls.getInt("relevant_condition_concept_id"), ls.getString("observation_source_value"), ls.getString("units_source_value")))
+        }
+        val labResults = sc.parallelize(labs)
+        //println("labResults", labResults.count)
+        
+        //val labResults =null
+
+        (patients, medication, labResults, diagnostics)
+    } 
     /*
     def loadRddRawDataLoincRelation(sc: SparkContext,sqlContext: SQLContext, conf:Config): RDD[ConceptRelation] = 
     {
