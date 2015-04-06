@@ -32,6 +32,11 @@ object Main {
         /** get configuration*/
         val conf = ConfigFactory.load()
 
+        //SparkConf sparkConf = new SparkConf().setAppName("Main").setMaster("local[2]").set("spark.executor.memory","5g");
+        //val SparkConf = new SparkConf().setAppName("Main").setMaster("spark://myhost:7077")
+
+        //conf.setMaster("local[2]")
+
         /** initialize loading of data */
         //loadRddRawData2(sqlContext, conf);
         var startTime = System.currentTimeMillis();
@@ -50,22 +55,19 @@ object Main {
 
         val race = loadRddRawDataRace(sqlContext, conf)
         val race_ancestors = loadRddRawDataRaceAncestor(sqlContext, conf)
-
         val loinc = loadRddRawDataLoinc(sqlContext, conf)
 
         val gender = loadRddRawDataGender(sqlContext, conf)
 
         val age = loadRddRawDataAge(sc)
 
-        var endTime = System.currentTimeMillis();
+        var endTime = System.currentTimeMillis()
         LOG.info(s"Data loaded in ${endTime - startTime} ms")
 
         /** build the graph */
-         val graph = GraphLoader.load(patient, medication, labResult, diagnostic, age, gender, race, rxnorm, loinc, snomed, race_ancestors, snomed_ancestors, rxnorm_ancestors, null, null, null, null)
-        val p = GraphLoader.runPageRank(graph)
-        p.foreach(println)
-    }
-//compute pagerank
+        val graph = GraphLoader.load(patient, medication, labResult, diagnostic, age, gender, race, rxnorm, loinc, snomed, race_ancestors, snomed_ancestors, rxnorm_ancestors, null, null, null, null)
+    
+        //compute pagerank
         //testKNN(graph)
         
         /*//Jaccard using only diagnosis
@@ -85,7 +87,8 @@ object Main {
         endTime = System.currentTimeMillis();
         LOG.info(s"Random walk completed in ${endTime - startTime} ms")        
         //testCosine(graph, 1, 0, 0)
-    }*/
+        //testCosine(graph, 1, 0, 0)*/
+    }
   
     def testCosine( graphInput:  Graph[VertexProperty, EdgeProperty], wd: Double, wm: Double, wl: Double ) = 
     {
@@ -140,6 +143,7 @@ object Main {
         val answerTop10patients = RandomWalk.randomWalkOneVsAll(graphInput, patientIDtoLookup)
         println("Random walk values")
         answerTop10patients.foreach(println)
+
         /*val (answerTop10med, answerTop10diag, answerTop10lab) = RandomWalk.summarize(graphInput, answerTop10patients)
         /* compute Jaccard coefficient on the graph */
         println("the top 10 most similar patients are: ")
@@ -226,7 +230,7 @@ object Main {
             "SELECT * FROM condition_occurrence OFFSET ? LIMIT ?;",
             0, rrs_count,1
             ,ds=> (Diagnostic(ds.getInt("condition_occurrence_id"), ds.getLong("person_id"), ds.getInt("condition_concept_id"), ds.getString("condition_start_date"), ds.getString("condition_end_date"), ds.getInt("condition_type_concept_id"), ds.getString("stop_reason"), ds.getInt("associated_provider_id"), ds.getBigDecimal("visit_occurrence_id"), ds.getString("condition_source_value"))))
-        
+
         println("diagnostics", diag.count)
         diag
         //println("Patients: ", patients.count)
@@ -310,7 +314,7 @@ def loadRddRawDataRxNorm(sqlContext: SQLContext, conf:Config): RDD[Vocabulary] =
         
         val connection = Datasource.connectServer(conf, dbname)
         val stmt = connection.getConnection.createStatement()
-        
+
         val rrs = stmt.executeQuery("SELECT count(*) as cnt FROM concept WHERE vocabulary_id = 1;")
         rrs.next()
         val rrs_count= rrs.getInt("cnt")
@@ -559,7 +563,7 @@ def loadRddRawDataRxNorm(sqlContext: SQLContext, conf:Config): RDD[Vocabulary] =
     }
     */
 
-     def createContext(appName: String, masterUrl: String): SparkContext = {
+    def createContext(appName: String, masterUrl: String): SparkContext = {
         val conf = new SparkConf().setAppName(appName)
         new SparkContext(conf)
     }

@@ -10,6 +10,9 @@ createdb -O sneha omop_vocabulary_v4
 
 psql -U sneha -d omop_vocabulary_v4 -f kingsman\data\dump\vocab.sql
 
+psql postgres
+
+alter user sneha with password 'sneha2511'
 
 //EMR
 sudo adduser sneha
