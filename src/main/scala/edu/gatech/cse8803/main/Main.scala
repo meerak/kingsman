@@ -67,20 +67,20 @@ object Main {
         LOG.info(s"Data loaded in ${endTime - startTime} ms")
 
         /** build the graph */
-        //val graph = GraphLoader.load(patient, medication, labResult, diagnostic, age, gender, race, rxnorm, loinc, snomed, race_ancestors, snomed_ancestors, rxnorm_ancestors, null, null, null, null)
+        val graph = GraphLoader.load(patient, medication, labResult, diagnostic, age, gender, race, rxnorm, loinc, snomed, race_ancestors, snomed_ancestors, rxnorm_ancestors, race_relations, snomed_relations, rxnorm_relations, loinc_relations)
     
-        //compute pagerank
-        //testKNN(graph)
-        
-        /*//Jaccard using only diagnosis
         startTime = System.currentTimeMillis();
         LOG.info("Compute cosine similarity")
-        testCosine(graph, 1, 0, 0)
+        testCosine(graph)
         endTime = System.currentTimeMillis();
         LOG.info(s"Cosine similarity calculated in ${endTime - startTime} ms")
 
-        //Weighted Jaccard
-        //testJaccard(graph, 0.5, 0.3, 0.2)
+        startTime = System.currentTimeMillis();
+        LOG.info("Compute cosine similarity")
+        testJaccard(graph)
+        endTime = System.currentTimeMillis();
+        LOG.info(s"Jaccard Coefficient calculated in ${endTime - startTime} ms")
+        
 
         //Random walk similarity
         startTime = System.currentTimeMillis();
@@ -88,54 +88,27 @@ object Main {
         testRandomWalk(graph)
         endTime = System.currentTimeMillis();
         LOG.info(s"Random walk completed in ${endTime - startTime} ms")        
-        //testCosine(graph, 1, 0, 0)
-        //testCosine(graph, 1, 0, 0)*/
     }
-  
-    def testCosine( graphInput:  Graph[VertexProperty, EdgeProperty], wd: Double, wm: Double, wl: Double ) = 
+    
+    def testCosine(graphInput:  Graph[VertexProperty, EdgeProperty]) = 
     {
         val patientIDtoLookup = "-87907000001"
-
-        val answerTop10patients = CosineSimilarity.cosineSimilarityOneVsAll(graphInput, patientIDtoLookup, wd, wm, wl)
+        
+        val answerTop10patients = CosineSimilarity.cosineSimilarityOneVsAll(graphInput, patientIDtoLookup)
+        println("Cosine values")
         answerTop10patients.foreach(println)
+
         null
     }
-  
-    def testKNN( graphInput:  Graph[VertexProperty, EdgeProperty] ) = 
-    {   
-        //val patientIDtoLookup = "-87907000001"
-        //val patientIDtoLookup = "-94169102" //dead
-        //val knnanswer = KNN.knnAllVsAll(graphInput, patientIDtoLookup)
-            val knnanswer = graphInput.vertices.filter(t=>(t._1 < 0)).collect()
-        val res = Array[Double]()
-        for(x <- knnanswer)
-        {
-            val temp = KNN.knnAllVsAll(graphInput, x._1.toString)
-            res :+  temp
-            println(x._1, x._2.asInstanceOf[PatientProperty].dead, temp)
-        }
-        //.map(x => (x._1, x._2.asInstanceOf[PatientProperty].dead, ))
-        //val t = knnanswer.map(x=> (x._1, x._2.asInstanceOf[PatientProperty].dead)).zip(res)
-        //t.foreach(println)
-        //println("KNN answer", knnanswer)
-    }
-  
-    def testJaccard( graphInput:  Graph[VertexProperty, EdgeProperty], wd: Double, wm: Double, wl: Double ) = 
+
+    def testJaccard(graphInput:  Graph[VertexProperty, EdgeProperty]) = 
     {
         val patientIDtoLookup = "-87907000001"
 
-        val answerTop10patients = Jaccard.jaccardSimilarityOneVsAll(graphInput, patientIDtoLookup, wd, wm, wl)
+        val answerTop10patients = Jaccard.jaccardSimilarityOneVsAll(graphInput, patientIDtoLookup)
         println("Jaccard values")
         answerTop10patients.foreach(println)
-    /*val (answerTop10med, answerTop10diag, answerTop10lab) = Jaccard.summarize(graphInput, answerTop10patients)
-    //compute Jaccard coefficient on the graph 
-    println("the top 10 most similar patients are: ")
-    // print the patinet IDs here
-    println("the top 10 meds, diagnoses, and labs for these 10 patients are: ")
-    //print the meds, diagnoses and labs here
-    answerTop10med.foreach(println)
-    answerTop10diag.foreach(println)
-    answerTop10lab.foreach(println)*/
+
         null
     }
   
@@ -146,19 +119,8 @@ object Main {
         println("Random walk values")
         answerTop10patients.foreach(println)
 
-        /*val (answerTop10med, answerTop10diag, answerTop10lab) = RandomWalk.summarize(graphInput, answerTop10patients)
-        /* compute Jaccard coefficient on the graph */
-        println("the top 10 most similar patients are: ")
-        // print the patinet IDs here
-        answerTop10patients.foreach(println)
-        println("the top 10 meds, diagnoes, and labs for these 10 patients are: ")
-        //print the meds, diagnoses and labs here
-        answerTop10med.foreach(println)
-        answerTop10diag.foreach(println)
-        answerTop10lab.foreach(println)*/
         null
     }
-
 
     def testPageRank( graphInput:  Graph[VertexProperty, EdgeProperty] ) = 
     {
