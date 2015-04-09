@@ -41,24 +41,31 @@ object Main {
         //loadRddRawData2(sqlContext, conf);
         var startTime = System.currentTimeMillis();
         LOG.info("Load data from database into RDD")
+
         val patient = loadRddRawDataPatients(sqlContext, conf)
         val medication = loadRddRawDataMedication(sqlContext, conf)
         val diagnostic = loadRddRawDataDiagnostics(sqlContext, conf)
         val labResult = loadRddRawDataLabResults(sqlContext, conf)
-        
+
         val rxnorm = loadRddRawDataRxNorm( sqlContext, conf)
         val rxnorm_ancestors = loadRddRawDataRxNormAncestor( sqlContext, conf)
         val rxnorm_relations = loadRddRawDataVocabRxnormRelation( sqlContext, conf)
+
         val snomed = loadRddRawDataSnomed(sqlContext, conf)
         val snomed_ancestors = loadRddRawDataSnomedAncestor( sqlContext, conf)
         val snomed_relations = loadRddRawDataVocabSnomedRelation( sqlContext, conf)
+
         val race = loadRddRawDataRace(sqlContext, conf)
         val race_ancestors = loadRddRawDataRaceAncestor(sqlContext, conf)
         val race_relations = loadRddRawDataVocabRaceRelation( sqlContext, conf)
+
         val loinc = loadRddRawDataLoinc(sqlContext, conf)
         val loinc_relations = loadRddRawDataVocabLoincRelation( sqlContext, conf)
+
         val gender = loadRddRawDataGender(sqlContext, conf)
+
         val age = loadRddRawDataAge(sc)
+
         var endTime = System.currentTimeMillis()
         println(s"Data loaded in ${endTime - startTime} ms")
         
@@ -277,14 +284,14 @@ object Main {
         val connection = Datasource.connectServer(conf, dbname)
         val stmt = connection.getConnection.createStatement()
         
-        val rrs = stmt.executeQuery("SELECT MAX(c.concept_id_1) as cnt FROM concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (SELECT concept_id FROM concept WHERE vocabulary_id = 8) and c.concept_id_2 in (SELECT concept_id FROM concept WHERE vocabulary_id = 8) and c.concept_id_1 != c.concept_id_2;")
+        val rrs = stmt.executeQuery("SELECT MAX(c.concept_id_1) as cnt FROM concept_relationship as c where c.concept_id_1 in (SELECT concept_id FROM concept WHERE vocabulary_id = 8) and c.concept_id_2 in (SELECT concept_id FROM concept WHERE vocabulary_id = 8) and c.concept_id_1 != c.concept_id_2;")
         rrs.next()
         val rrs_count= rrs.getInt("cnt")
 
         val conn_str = s"jdbc:postgresql://" + conf.getString("db-setting.host") + ":" +  conf.getString("db-setting.port") + "/" + dbname + "?user=" + conf.getString("db-setting.user") + "&password=" + conf.getString("db-setting.password")
 
         val rxnorm_relations = new JdbcRDD(sqlContext.sparkContext, () => DriverManager.getConnection(conn_str),
-        "SELECT c.concept_id_1 as concept_id_1, c.concept_id_2 as concept_id_2, r.relationship_name as relationship_name from concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (select concept_id from concept where vocabulary_id = 8) and c.concept_id_2 in (select concept_id from concept where vocabulary_id = 8) and c.concept_id_1 != c.concept_id_2 AND ? <= c.concept_id_1 and c.concept_id_2 <= ?;"
+        "SELECT c.concept_id_1 as concept_id_1, c.concept_id_2 as concept_id_2, r.relationship_name as relationship_name from concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (select concept_id from concept where vocabulary_id = 8) and c.concept_id_2 in (select concept_id from concept where vocabulary_id = 8) and c.concept_id_1 != c.concept_id_2 AND ? <= c.concept_id_1 and c.concept_id_1 <= ?;"
         ,0, rrs_count, 10
         ,ras => (ConceptRelation(ras.getInt("concept_id_1"), ras.getInt("concept_id_2"), ras.getString("relationship_name"))))
         
@@ -300,14 +307,14 @@ object Main {
         val connection = Datasource.connectServer(conf, dbname)
         val stmt = connection.getConnection.createStatement()
         
-        val rrs = stmt.executeQuery("SELECT MAX(c.concept_id_1) as cnt FROM concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (SELECT concept_id FROM concept WHERE vocabulary_id = 1) and c.concept_id_2 in (SELECT concept_id FROM concept WHERE vocabulary_id = 1) and c.concept_id_1 != c.concept_id_2;")
+        val rrs = stmt.executeQuery("SELECT MAX(c.concept_id_1) as cnt FROM concept_relationship as c where c.concept_id_1 in (SELECT concept_id FROM concept WHERE vocabulary_id = 1) and c.concept_id_2 in (SELECT concept_id FROM concept WHERE vocabulary_id = 1) and c.concept_id_1 != c.concept_id_2;")
         rrs.next()
         val rrs_count= rrs.getInt("cnt")
 
         val conn_str = s"jdbc:postgresql://" + conf.getString("db-setting.host") + ":" +  conf.getString("db-setting.port") + "/" + dbname + "?user=" + conf.getString("db-setting.user") + "&password=" + conf.getString("db-setting.password")
 
         val snomed_relations = new JdbcRDD(sqlContext.sparkContext, () => DriverManager.getConnection(conn_str),
-        "SELECT c.concept_id_1 as concept_id_1, c.concept_id_2 as concept_id_2, r.relationship_name as relationship_name from concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (select concept_id from concept where vocabulary_id = 1s) and c.concept_id_2 in (select concept_id from concept where vocabulary_id = 1) and c.concept_id_1 != c.concept_id_2 AND ? <= c.concept_id_1 and c.concept_id_2 <= ?;"
+        "SELECT c.concept_id_1 as concept_id_1, c.concept_id_2 as concept_id_2, r.relationship_name as relationship_name from concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (select concept_id from concept where vocabulary_id = 1) and c.concept_id_2 in (select concept_id from concept where vocabulary_id = 1) and c.concept_id_1 != c.concept_id_2 AND ? <= c.concept_id_1 and c.concept_id_1 <= ?;"
         ,0, rrs_count, 10
         ,ras => (ConceptRelation(ras.getInt("concept_id_1"), ras.getInt("concept_id_2"), ras.getString("relationship_name"))))
         
@@ -323,14 +330,14 @@ object Main {
         val connection = Datasource.connectServer(conf, dbname)
         val stmt = connection.getConnection.createStatement()
         
-        val rrs = stmt.executeQuery("SELECT MAX(c.concept_id_1) as cnt FROM concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (SELECT concept_id FROM concept WHERE vocabulary_id = 6) and c.concept_id_2 in (SELECT concept_id FROM concept WHERE vocabulary_id = 6) and c.concept_id_1 != c.concept_id_2;")
+        val rrs = stmt.executeQuery("SELECT MAX(c.concept_id_1) as cnt FROM concept_relationship as c where c.concept_id_1 in (SELECT concept_id FROM concept WHERE vocabulary_id = 6) and c.concept_id_2 in (SELECT concept_id FROM concept WHERE vocabulary_id = 6) and c.concept_id_1 != c.concept_id_2;")
         rrs.next()
         val rrs_count= rrs.getInt("cnt")
 
         val conn_str = s"jdbc:postgresql://" + conf.getString("db-setting.host") + ":" +  conf.getString("db-setting.port") + "/" + dbname + "?user=" + conf.getString("db-setting.user") + "&password=" + conf.getString("db-setting.password")
 
         val loinc_relations = new JdbcRDD(sqlContext.sparkContext, () => DriverManager.getConnection(conn_str),
-        "SELECT c.concept_id_1 as concept_id_1, c.concept_id_2 as concept_id_2, r.relationship_name as relationship_name from concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (select concept_id from concept where vocabulary_id = 6) and c.concept_id_2 in (select concept_id from concept where vocabulary_id = 6) and c.concept_id_1 != c.concept_id_2 AND ? <= c.concept_id_1 and c.concept_id_2 <= ?;"
+        "SELECT c.concept_id_1 as concept_id_1, c.concept_id_2 as concept_id_2, r.relationship_name as relationship_name from concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (select concept_id from concept where vocabulary_id = 6) and c.concept_id_2 in (select concept_id from concept where vocabulary_id = 6) and c.concept_id_1 != c.concept_id_2 AND ? <= c.concept_id_1 and c.concept_id_1 <= ?;"
         ,0, rrs_count, 10
         ,ras => (ConceptRelation(ras.getInt("concept_id_1"), ras.getInt("concept_id_2"), ras.getString("relationship_name"))))
         
@@ -346,14 +353,14 @@ object Main {
         val connection = Datasource.connectServer(conf, dbname)
         val stmt = connection.getConnection.createStatement()
         
-        val rrs = stmt.executeQuery("SELECT MAX(c.concept_id_1) as cnt FROM concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (SELECT concept_id FROM concept WHERE vocabulary_id = 13) and c.concept_id_2 in (SELECT concept_id FROM concept WHERE vocabulary_id = 13) and c.concept_id_1 != c.concept_id_2;")
+        val rrs = stmt.executeQuery("SELECT MAX(c.concept_id_1) as cnt FROM concept_relationship as c where c.concept_id_1 in (SELECT concept_id FROM concept WHERE vocabulary_id = 13) and c.concept_id_2 in (SELECT concept_id FROM concept WHERE vocabulary_id = 13) and c.concept_id_1 != c.concept_id_2;")
         rrs.next()
         val rrs_count= rrs.getInt("cnt")
 
         val conn_str = s"jdbc:postgresql://" + conf.getString("db-setting.host") + ":" +  conf.getString("db-setting.port") + "/" + dbname + "?user=" + conf.getString("db-setting.user") + "&password=" + conf.getString("db-setting.password")
 
         val race_relations = new JdbcRDD(sqlContext.sparkContext, () => DriverManager.getConnection(conn_str),
-        "SELECT c.concept_id_1 as concept_id_1, c.concept_id_2 as concept_id_2, r.relationship_name as relationship_name from concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (select concept_id from concept where vocabulary_id = 13) and c.concept_id_2 in (select concept_id from concept where vocabulary_id = 13) and c.concept_id_1 != c.concept_id_2 AND ? <= c.concept_id_1 and c.concept_id_2 <= ?;"
+        "SELECT c.concept_id_1 as concept_id_1, c.concept_id_2 as concept_id_2, r.relationship_name as relationship_name from concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (select concept_id from concept where vocabulary_id = 13) and c.concept_id_2 in (select concept_id from concept where vocabulary_id = 13) and c.concept_id_1 != c.concept_id_2 AND ? <= c.concept_id_1 and c.concept_id_1 <= ?;"
         ,0, rrs_count, 10
         ,ras => (ConceptRelation(ras.getInt("concept_id_1"), ras.getInt("concept_id_2"), ras.getString("relationship_name"))))
         
@@ -361,7 +368,6 @@ object Main {
         connection.close()
         race_relations
     }
-
 
 
     def loadRddRawDataSnomed(sqlContext: SQLContext, conf:Config): RDD[Vocabulary] = 
