@@ -30,7 +30,7 @@ object CosineSimilarity
           .filter(_._2 > 0.0)
           .filter(x => x._1 != bcSrcVertexId.value)
           .takeOrdered(10)(scala.Ordering.by(-_._2))
-          .map(s_._1.toString())
+          .map(_._1.toString())
           .toList
   }
 }
