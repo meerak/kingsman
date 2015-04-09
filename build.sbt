@@ -14,6 +14,7 @@ resolvers ++= Seq(
   Resolver.sonatypeRepo("releases"),
   Resolver.sonatypeRepo("snapshots")
 )
+resolvers += "Job Server Bintray" at "https://dl.bintray.com/spark-jobserver/maven"
 
 libraryDependencies ++= Seq(
   "org.apache.spark"  % "spark-core_2.10"              % "1.2.0" % "provided",
@@ -25,7 +26,8 @@ libraryDependencies ++= Seq(
   "org.apache.commons" % "commons-dbcp2" % "2.0.1",
   "com.typesafe" % "config" % "1.2.1",
  "org.slf4j" % "slf4j-api" % "1.7.12",
-    "org.slf4j" % "slf4j-simple" % "1.7.12"
+    "org.slf4j" % "slf4j-simple" % "1.7.12",
+    "spark.jobserver" % "job-server-api" % "0.5.0" % "provided"
 )
 
 val buildSettings = Defaults.defaultSettings ++ Seq(

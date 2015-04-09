@@ -19,8 +19,17 @@ import scala.io.Source
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import scala.collection.mutable.MutableList
-
+object Similarity  extends SparkJob {
+    override def runJob(sc:SparkContext, jobConfig: Config): Any = {
+        val str =  sc.parallelize(config.getString("input.string").split(" ").toSeq)
+        str.map((_,1).reduceByKey(_+_).collect().toMap
+    }
+    override def validate(sc:SparkContext, config: Config): SparkJobValidation = {
+        Try(config.getString("input.string"))
+            .map(x=>SparkJobValid)
+            .getOrElse(SparkJobInvalid("No input string"))
+    }
+}
 
 object Main {
     private val LOG = LoggerFactory.getLogger(getClass())
