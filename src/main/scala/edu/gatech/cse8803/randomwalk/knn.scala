@@ -15,7 +15,7 @@ object KNN
 {  
   def knnAllVsAll(graph:Graph[VertexProperty, EdgeProperty], patientIDtoLookup:String): Double = 
   {
-    val top10 = CosineSimilarity.cosineSimilarityOneVsAll(graph, patientIDtoLookup, 1, 0, 0)
+    val top10 = CosineSimilarity.cosineSimilarityOneVsAll(graph, patientIDtoLookup)
     val probabilityCount = graph.vertices.filter(x => top10.contains(x._1.toString)).map(x => (x._2.asInstanceOf[PatientProperty].dead, 1)).reduceByKey(_ + _)
     var one = probabilityCount.lookup(1)
     var zero = probabilityCount.lookup(0)
