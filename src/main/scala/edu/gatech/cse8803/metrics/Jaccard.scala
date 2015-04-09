@@ -18,7 +18,7 @@ object Jaccard
 
         graph
           .collectNeighbors(EdgeDirection.Out)
-          .filter{case (idx, neighbors) => neighbors.size > 0 && !neighbors.exists{case(_, p) => p.isInstanceOf[PatientProperty]}}
+          .filter{case (idx, neighbors) => neighbors.size > 0 && idx < 0}
           .mapValues
           {
             neighbors:Array[(VertexId, VertexProperty)] =>
