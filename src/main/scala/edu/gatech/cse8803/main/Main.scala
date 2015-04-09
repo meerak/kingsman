@@ -41,21 +41,22 @@ object Main {
         //loadRddRawData2(sqlContext, conf);
         var startTime = System.currentTimeMillis();
         LOG.info("Load data from database into RDD")
-        val patient = loadRddRawDataPat2(sqlContext, conf)
-        val medication = loadRddRawDataMed2(sqlContext, conf)
-        val diagnostic = loadRddRawDataDiag2(sqlContext, conf)
-        val labResult = loadRddRawDataLab2(sqlContext, conf)
+        val patient = loadRddRawDataPatients(sqlContext, conf)
+        val medication = loadRddRawDataMedication(sqlContext, conf)
+        val diagnostic = loadRddRawDataDiagnostics(sqlContext, conf)
+        val labResult = loadRddRawDataLabResults(sqlContext, conf)
+        
         val rxnorm = loadRddRawDataRxNorm( sqlContext, conf)
         val rxnorm_ancestors = loadRddRawDataRxNormAncestor( sqlContext, conf)
-        val rxnorm_relations = loadRddRawDataRxNormRelation( sqlContext, conf)
+        val rxnorm_relations = loadRddRawDataVocabRxnormRelation( sqlContext, conf)
         val snomed = loadRddRawDataSnomed(sqlContext, conf)
         val snomed_ancestors = loadRddRawDataSnomedAncestor( sqlContext, conf)
-        val snomed_relations = loadRddRawDataSnomedRelation( sqlContext, conf)
+        val snomed_relations = loadRddRawDataVocabSnomedRelation( sqlContext, conf)
         val race = loadRddRawDataRace(sqlContext, conf)
         val race_ancestors = loadRddRawDataRaceAncestor(sqlContext, conf)
-        val race_relations = loadRddRawDataRaceRelation( sqlContext, conf)
+        val race_relations = loadRddRawDataVocabRaceRelation( sqlContext, conf)
         val loinc = loadRddRawDataLoinc(sqlContext, conf)
-        val loinc_relations = loadRddRawDataLoincRelation( sqlContext, conf)
+        val loinc_relations = loadRddRawDataVocabLoincRelation( sqlContext, conf)
         val gender = loadRddRawDataGender(sqlContext, conf)
         val age = loadRddRawDataAge(sc)
         var endTime = System.currentTimeMillis()
@@ -132,12 +133,6 @@ object Main {
         answerTop10patients.foreach(println)
 
         null
-    }
-
-    def testPageRank( graphInput:  Graph[VertexProperty, EdgeProperty] ) = 
-    {
-        val p = GraphLoader.runPageRank(graphInput)
-        p.foreach(println)
     }
 
     def loadRddRawDataLabResults(sqlContext: SQLContext, conf:Config) = {
@@ -275,6 +270,100 @@ object Main {
         rxnorm_ancestor
     }
 
+    def loadRddRawDataVocabRxnormRelation(sqlContext: SQLContext, conf:Config): RDD[ConceptRelation] = 
+    {
+        val dbname = conf.getString("db-setting.database_vocab")
+        
+        val connection = Datasource.connectServer(conf, dbname)
+        val stmt = connection.getConnection.createStatement()
+        
+        val rrs = stmt.executeQuery("SELECT MAX(c.concept_id_1) as cnt FROM concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (SELECT concept_id FROM concept WHERE vocabulary_id = 8) and c.concept_id_2 in (SELECT concept_id FROM concept WHERE vocabulary_id = 8) and c.concept_id_1 != c.concept_id_2;")
+        rrs.next()
+        val rrs_count= rrs.getInt("cnt")
+
+        val conn_str = s"jdbc:postgresql://" + conf.getString("db-setting.host") + ":" +  conf.getString("db-setting.port") + "/" + dbname + "?user=" + conf.getString("db-setting.user") + "&password=" + conf.getString("db-setting.password")
+
+        val rxnorm_relations = new JdbcRDD(sqlContext.sparkContext, () => DriverManager.getConnection(conn_str),
+        "SELECT c.concept_id_1 as concept_id_1, c.concept_id_2 as concept_id_2, r.relationship_name as relationship_name from concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (select concept_id from concept where vocabulary_id = 8) and c.concept_id_2 in (select concept_id from concept where vocabulary_id = 8) and c.concept_id_1 != c.concept_id_2 AND ? <= c.concept_id_1 and c.concept_id_2 <= ?;"
+        ,0, rrs_count, 10
+        ,ras => (ConceptRelation(ras.getInt("concept_id_1"), ras.getInt("concept_id_2"), ras.getString("relationship_name"))))
+        
+        println("Rxnorm Relationship Count", rxnorm_relations.count)
+        connection.close()
+        rxnorm_relations
+    }
+
+    def loadRddRawDataVocabSnomedRelation(sqlContext: SQLContext, conf:Config): RDD[ConceptRelation] = 
+    {
+        val dbname = conf.getString("db-setting.database_vocab")
+        
+        val connection = Datasource.connectServer(conf, dbname)
+        val stmt = connection.getConnection.createStatement()
+        
+        val rrs = stmt.executeQuery("SELECT MAX(c.concept_id_1) as cnt FROM concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (SELECT concept_id FROM concept WHERE vocabulary_id = 1) and c.concept_id_2 in (SELECT concept_id FROM concept WHERE vocabulary_id = 1) and c.concept_id_1 != c.concept_id_2;")
+        rrs.next()
+        val rrs_count= rrs.getInt("cnt")
+
+        val conn_str = s"jdbc:postgresql://" + conf.getString("db-setting.host") + ":" +  conf.getString("db-setting.port") + "/" + dbname + "?user=" + conf.getString("db-setting.user") + "&password=" + conf.getString("db-setting.password")
+
+        val snomed_relations = new JdbcRDD(sqlContext.sparkContext, () => DriverManager.getConnection(conn_str),
+        "SELECT c.concept_id_1 as concept_id_1, c.concept_id_2 as concept_id_2, r.relationship_name as relationship_name from concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (select concept_id from concept where vocabulary_id = 1s) and c.concept_id_2 in (select concept_id from concept where vocabulary_id = 1) and c.concept_id_1 != c.concept_id_2 AND ? <= c.concept_id_1 and c.concept_id_2 <= ?;"
+        ,0, rrs_count, 10
+        ,ras => (ConceptRelation(ras.getInt("concept_id_1"), ras.getInt("concept_id_2"), ras.getString("relationship_name"))))
+        
+        println("Snomed Relationship Count", snomed_relations.count)
+        connection.close()
+        snomed_relations
+    }
+
+    def loadRddRawDataVocabLoincRelation(sqlContext: SQLContext, conf:Config): RDD[ConceptRelation] = 
+    {
+        val dbname = conf.getString("db-setting.database_vocab")
+        
+        val connection = Datasource.connectServer(conf, dbname)
+        val stmt = connection.getConnection.createStatement()
+        
+        val rrs = stmt.executeQuery("SELECT MAX(c.concept_id_1) as cnt FROM concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (SELECT concept_id FROM concept WHERE vocabulary_id = 6) and c.concept_id_2 in (SELECT concept_id FROM concept WHERE vocabulary_id = 6) and c.concept_id_1 != c.concept_id_2;")
+        rrs.next()
+        val rrs_count= rrs.getInt("cnt")
+
+        val conn_str = s"jdbc:postgresql://" + conf.getString("db-setting.host") + ":" +  conf.getString("db-setting.port") + "/" + dbname + "?user=" + conf.getString("db-setting.user") + "&password=" + conf.getString("db-setting.password")
+
+        val loinc_relations = new JdbcRDD(sqlContext.sparkContext, () => DriverManager.getConnection(conn_str),
+        "SELECT c.concept_id_1 as concept_id_1, c.concept_id_2 as concept_id_2, r.relationship_name as relationship_name from concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (select concept_id from concept where vocabulary_id = 6) and c.concept_id_2 in (select concept_id from concept where vocabulary_id = 6) and c.concept_id_1 != c.concept_id_2 AND ? <= c.concept_id_1 and c.concept_id_2 <= ?;"
+        ,0, rrs_count, 10
+        ,ras => (ConceptRelation(ras.getInt("concept_id_1"), ras.getInt("concept_id_2"), ras.getString("relationship_name"))))
+        
+        println("Loinc Relationship Count", loinc_relations.count)
+        connection.close()
+        loinc_relations
+    }
+
+    def loadRddRawDataVocabRaceRelation(sqlContext: SQLContext, conf:Config): RDD[ConceptRelation] = 
+    {
+        val dbname = conf.getString("db-setting.database_vocab")
+        
+        val connection = Datasource.connectServer(conf, dbname)
+        val stmt = connection.getConnection.createStatement()
+        
+        val rrs = stmt.executeQuery("SELECT MAX(c.concept_id_1) as cnt FROM concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (SELECT concept_id FROM concept WHERE vocabulary_id = 13) and c.concept_id_2 in (SELECT concept_id FROM concept WHERE vocabulary_id = 13) and c.concept_id_1 != c.concept_id_2;")
+        rrs.next()
+        val rrs_count= rrs.getInt("cnt")
+
+        val conn_str = s"jdbc:postgresql://" + conf.getString("db-setting.host") + ":" +  conf.getString("db-setting.port") + "/" + dbname + "?user=" + conf.getString("db-setting.user") + "&password=" + conf.getString("db-setting.password")
+
+        val race_relations = new JdbcRDD(sqlContext.sparkContext, () => DriverManager.getConnection(conn_str),
+        "SELECT c.concept_id_1 as concept_id_1, c.concept_id_2 as concept_id_2, r.relationship_name as relationship_name from concept_relationship as c join relationship as r on c.relationship_id = r.relationship_id where c.concept_id_1 in (select concept_id from concept where vocabulary_id = 13) and c.concept_id_2 in (select concept_id from concept where vocabulary_id = 13) and c.concept_id_1 != c.concept_id_2 AND ? <= c.concept_id_1 and c.concept_id_2 <= ?;"
+        ,0, rrs_count, 10
+        ,ras => (ConceptRelation(ras.getInt("concept_id_1"), ras.getInt("concept_id_2"), ras.getString("relationship_name"))))
+        
+        println("Rxnorm Relationship Count", race_relations.count)
+        connection.close()
+        race_relations
+    }
+
+
+
     def loadRddRawDataSnomed(sqlContext: SQLContext, conf:Config): RDD[Vocabulary] = 
     {
         val dbname = conf.getString("db-setting.database_vocab")
@@ -321,7 +410,7 @@ object Main {
         snomed_ancestor
     }
 
-        def loadRddRawDataLoinc(sqlContext: SQLContext, conf:Config): RDD[Vocabulary] = 
+    def loadRddRawDataLoinc(sqlContext: SQLContext, conf:Config): RDD[Vocabulary] = 
     {
         val dbname = conf.getString("db-setting.database_vocab")
         
