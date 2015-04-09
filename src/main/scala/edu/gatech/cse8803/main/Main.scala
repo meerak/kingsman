@@ -6,7 +6,6 @@ import edu.gatech.cse8803.metrics._
 import edu.gatech.cse8803.model._
 import edu.gatech.cse8803.randomwalk._
 import edu.gatech.cse8803.main._
-
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SQLContext
@@ -97,7 +96,13 @@ object Main {
         LOG.info("Started random walk")
         testRandomWalk(graph)
         endTime = System.currentTimeMillis();
-        println(s"Random walk completed in ${endTime - startTime} ms")      
+        println(s"Random walk completed in ${endTime - startTime} ms")  
+    
+        startTime = System.currentTimeMillis();
+        LOG.info("KNN")
+        testKNN(graph)
+        endTime = System.currentTimeMillis();
+        println(s"K - Nearest Neighbor completed in ${endTime - startTime} ms") 
     }
 
     def testMinimum(graphInput:  Graph[VertexProperty, EdgeProperty]) = 
@@ -110,6 +115,7 @@ object Main {
 
         null
     }    
+
     def testCosine(graphInput:  Graph[VertexProperty, EdgeProperty]) = 
     {
         val patientIDtoLookup = "-87907000001"
@@ -138,6 +144,48 @@ object Main {
         val answerTop10patients = RandomWalk.randomWalkOneVsAll(graphInput, patientIDtoLookup)
         println("Random walk values")
         answerTop10patients.foreach(println)
+
+        null
+    }
+
+    def testKNN( graphInput:  Graph[VertexProperty, EdgeProperty] ) = 
+    {
+        val patientIDtoLookup = "-87907000001" //"-94169102" - dead
+        val (answerTop10patients, knnanswer) = KNN.knnOneVsAll(graphInput, patientIDtoLookup)
+        println("KNN answer", knnanswer)
+
+        val (answerTop10diag, answerTop10med, answerTop10lab, answerTop10race, answerTop10gender, answerTop10age) = KNN.summarize(graphInput, answerTop10patients)
+
+        println("Top Med")
+        answerTop10med.foreach(println)
+
+        println("Top Diag")
+        answerTop10diag.foreach(println)
+
+        println("Top Lab")
+        answerTop10lab.foreach(println)
+
+        println("Top Race")
+        answerTop10race.foreach(println)
+
+        println("Top Gender")
+        answerTop10gender.foreach(println)
+
+        println("Top Age")
+        answerTop10age.foreach(println)
+
+        //val knnanswer = graphInput.vertices.filter(t=>(t._1 < 0)).collect()
+        //val res = Array[Double]()
+        /*
+        for(x <- knnanswer){
+            val temp = KNN.knnAllVsAll(graphInput, x._1.toString)
+            res :+  temp
+            println(x._1, x._2.asInstanceOf[PatientProperty].dead, temp)
+        }
+        //.map(x => (x._1, x._2.asInstanceOf[PatientProperty].dead, ))
+        //val t = knnanswer.map(x=> (x._1, x._2.asInstanceOf[PatientProperty].dead)).zip(res)
+        //foreach(println)
+        */
 
         null
     }
@@ -515,7 +563,8 @@ object Main {
         age
     }
 
-    def createContext(appName: String, masterUrl: String): SparkContext = {
+    def createContext(appName: String, masterUrl: String): SparkContext = 
+    {
         //val conf = new SparkConf().setAppName(appName)
          val conf = new SparkConf().setAppName(appName)
          //.set("spark.driver.memory", "10g").set("spark.executor.memory", "10g")
