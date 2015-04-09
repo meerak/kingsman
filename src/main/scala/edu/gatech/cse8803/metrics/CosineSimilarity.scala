@@ -11,7 +11,7 @@ object CosineSimilarity
 {
   def cosineSimilarityOneVsAll(graph: Graph[VertexProperty, EdgeProperty], patientID: String): List[String] = 
   {
-       val bcSrcVertexId = graph.edges.sparkContext.broadcast(patientID.toLong)
+        val bcSrcVertexId = graph.edges.sparkContext.broadcast(patientID.toLong)
 
         val srcCharacteristic = graph.edges.filter{case Edge(srcId, dstId, edgeProperty) => srcId == bcSrcVertexId.value}.map{_.dstId}.collect().toSet
         val bcSrcCharacteristic = graph.edges.sparkContext.broadcast(srcCharacteristic)
@@ -30,7 +30,7 @@ object CosineSimilarity
           .filter(_._2 > 0.0)
           .filter(x => x._1 != bcSrcVertexId.value)
           .takeOrdered(10)(scala.Ordering.by(-_._2))
-          .map(s_._1.toString())
+          .map(x => (-1 * x._1).toString())
           .toList
   }
 }
