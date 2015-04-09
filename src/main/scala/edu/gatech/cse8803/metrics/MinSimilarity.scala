@@ -7,9 +7,9 @@ import scala.collection.mutable.Map
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
-object CosineSimilarity 
+object MinSimilarity 
 {
-  def cosineSimilarityOneVsAll(graph: Graph[VertexProperty, EdgeProperty], patientID: String): List[String] = 
+  def MinSimilarityOneVsAll(graph: Graph[VertexProperty, EdgeProperty], patientID: String): List[String] = 
   {
         val bcSrcVertexId = graph.edges.sparkContext.broadcast(patientID.toLong)
 
@@ -25,11 +25,11 @@ object CosineSimilarity
             val characteristic = neighbors.map(_._1).toSet
             val intersect = bcSrcCharacteristic.value.intersect(characteristic)
             if(characteristic.size == 0 && srcCharacteristic.size == 0) 0.0 
-            else intersect.size.toDouble / Math.sqrt(characteristic.size.toDouble * srcCharacteristic.size.toDouble)
+            else intersect.size.toDouble / Math.min(characteristic.size.toDouble, srcCharacteristic.size.toDouble)
           }
           .filter(_._2 > 0.0)
           .filter(x => x._1 != bcSrcVertexId.value)
-          .takeOrdered(10)(scala.Ordering.by(-_._2))
+          .takeOrdered(100)(scala.Ordering.by(-_._2))
           .map(x => (-1 * x._1).toString())
           .toList
   }

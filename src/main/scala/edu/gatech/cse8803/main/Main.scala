@@ -50,55 +50,67 @@ object Main {
         //loadRddRawData2(sqlContext, conf);
         var startTime = System.currentTimeMillis();
         LOG.info("Load data from database into RDD")
-    
-        Class.forName("org.postgresql.Driver").newInstance()
-
-        val patient = loadRddRawDataPatients(sqlContext, conf)
-        val medication = loadRddRawDataMedication(sqlContext, conf)
-        val diagnostic = loadRddRawDataDiagnostics(sqlContext, conf)
-        val labResult = loadRddRawDataLabResults( sqlContext, conf)
-
+        val patient = loadRddRawDataPat2(sqlContext, conf)
+        val medication = loadRddRawDataMed2(sqlContext, conf)
+        val diagnostic = loadRddRawDataDiag2(sqlContext, conf)
+        val labResult = loadRddRawDataLab2(sqlContext, conf)
         val rxnorm = loadRddRawDataRxNorm( sqlContext, conf)
         val rxnorm_ancestors = loadRddRawDataRxNormAncestor( sqlContext, conf)
-
+        val rxnorm_relations = loadRddRawDataRxNormRelation( sqlContext, conf)
         val snomed = loadRddRawDataSnomed(sqlContext, conf)
         val snomed_ancestors = loadRddRawDataSnomedAncestor( sqlContext, conf)
-
-        val loinc = loadRddRawDataLoinc(sqlContext, conf)
-
+        val snomed_relations = loadRddRawDataSnomedRelation( sqlContext, conf)
         val race = loadRddRawDataRace(sqlContext, conf)
         val race_ancestors = loadRddRawDataRaceAncestor(sqlContext, conf)
-        
+        val race_relations = loadRddRawDataRaceRelation( sqlContext, conf)
+        val loinc = loadRddRawDataLoinc(sqlContext, conf)
+        val loinc_relations = loadRddRawDataLoincRelation( sqlContext, conf)
         val gender = loadRddRawDataGender(sqlContext, conf)
         val age = loadRddRawDataAge(sc)
-
         var endTime = System.currentTimeMillis()
-        LOG.info(s"Data loaded in ${endTime - startTime} ms")
-
-        /** build the graph */
+        println(s"Data loaded in ${endTime - startTime} ms")
+        
+        startTime = System.currentTimeMillis();
+        LOG.info("Started cosine similarity")
         val graph = GraphLoader.load(patient, medication, labResult, diagnostic, age, gender, race, rxnorm, loinc, snomed, race_ancestors, snomed_ancestors, rxnorm_ancestors, race_relations, snomed_relations, rxnorm_relations, loinc_relations)
+        endTime = System.currentTimeMillis();
+        println(s"Graph constructed in ${endTime - startTime} ms")
     
         startTime = System.currentTimeMillis();
-        LOG.info("Compute cosine similarity")
-        testCosine(graph)
+        LOG.info("Started Minimum similarity")
+        testMinimum(graph)
         endTime = System.currentTimeMillis();
-        LOG.info(s"Cosine similarity calculated in ${endTime - startTime} ms")
+        println(s"Minimum similarity calculated in ${endTime - startTime} ms")
 
         startTime = System.currentTimeMillis();
-        LOG.info("Compute cosine similarity")
+        LOG.info("Started cosine similarity")
+        testCosine(graph)
+        endTime = System.currentTimeMillis();
+        println(s"Cosine similarity calculated in ${endTime - startTime} ms")
+
+        startTime = System.currentTimeMillis();
+        LOG.info("Started cosine similarity")
         testJaccard(graph)
         endTime = System.currentTimeMillis();
-        LOG.info(s"Jaccard Coefficient calculated in ${endTime - startTime} ms")
-        
+        println(s"Jaccard coefficient calculated in ${endTime - startTime} ms")
 
-        //Random walk similarity
         startTime = System.currentTimeMillis();
         LOG.info("Started random walk")
         testRandomWalk(graph)
         endTime = System.currentTimeMillis();
-        LOG.info(s"Random walk completed in ${endTime - startTime} ms")        
+        println(s"Random walk completed in ${endTime - startTime} ms")      
     }
-    
+
+    def testMinimum(graphInput:  Graph[VertexProperty, EdgeProperty]) = 
+    {
+        val patientIDtoLookup = "-87907000001"
+        
+        val answerTop10patients = MinSimilarity.MinSimilarityOneVsAll(graphInput, patientIDtoLookup)
+        println("Minimum values")
+        answerTop10patients.foreach(println)
+
+        null
+    }    
     def testCosine(graphInput:  Graph[VertexProperty, EdgeProperty]) = 
     {
         val patientIDtoLookup = "-87907000001"

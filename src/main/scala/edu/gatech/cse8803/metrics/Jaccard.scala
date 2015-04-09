@@ -4,12 +4,11 @@ import edu.gatech.cse8803.model._
 import edu.gatech.cse8803.model.{EdgeProperty, VertexProperty}
 import org.apache.spark.graphx._
 import scala.collection.mutable.Map
-import scala.collection.mutable.ListBuffer
 import org.apache.spark.rdd.RDD
 import org.apache.spark.SparkContext._
 
-object Jaccard {
-    
+object Jaccard
+{    
    def jaccardSimilarityOneVsAll(graph: Graph[VertexProperty, EdgeProperty], patientID: String): List[String] = 
    {
         val bcSrcVertexId = graph.edges.sparkContext.broadcast(patientID.toLong)
@@ -31,8 +30,8 @@ object Jaccard {
           }
           .filter(_._2 > 0.0)
           .filter(x => x._1 != bcSrcVertexId.value)
-          .takeOrdered(10)(scala.Ordering.by(-_._2))
-          .map(_._1.toString())
+          .takeOrdered(100)(scala.Ordering.by(-_._2))
+          .map(x => (-1 * x._1).toString())
           .toList
     }
 }
