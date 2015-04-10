@@ -33,18 +33,18 @@ object GraphLoader
     //println("Race Ancestors")
     val raceRelationEdges: RDD[Edge[EdgeProperty]] = race_relations.map(a=>Edge(a.source.toLong, a.dest.toLong, ConceptRelationEdgeProperty(a.relation)))
 
-    val patraceEdges:RDD[Edge[EdgeProperty]] = patients.map(e => Edge(-e.person_id.toLong, e.race_concept_id.toLong, PatientRaceEdgeProperty(Race(-e.person_id.toLong, e.race_concept_id))))
-    val racepatEdges:RDD[Edge[EdgeProperty]] = patients.map(e => Edge(e.race_concept_id.toLong, -e.person_id.toLong, PatientRaceEdgeProperty(Race(-e.person_id.toLong, e.race_concept_id))))
+    val patraceEdges:RDD[Edge[EdgeProperty]] = patients.map(e => Edge(-e.person_id.toLong, e.race_concept_id.toLong, PatientRaceEdgeProperty(Enumerations.BELONGS)))
+    val racepatEdges:RDD[Edge[EdgeProperty]] = patients.map(e => Edge(e.race_concept_id.toLong, -e.person_id.toLong, PatientRaceEdgeProperty(Enumerations.BELONGS)))
     //println("Race Edges")
 
-    val patgenEdges: RDD[Edge[EdgeProperty]] = patients.map(e => Edge(-e.person_id.toLong, e.gender_concept_id.toLong, PatientGenderEdgeProperty(Gender(-e.person_id.toLong, e.gender_concept_id))))
-    val genpatEdges:RDD[Edge[EdgeProperty]] = patients.map(e => Edge(e.gender_concept_id.toLong, -e.person_id.toLong, PatientGenderEdgeProperty(Gender(-e.person_id.toLong, e.gender_concept_id))))
+    val patgenEdges: RDD[Edge[EdgeProperty]] = patients.map(e => Edge(-e.person_id.toLong, e.gender_concept_id.toLong, PatientGenderEdgeProperty(Enumerations.BELONGS)))
+    val genpatEdges:RDD[Edge[EdgeProperty]] = patients.map(e => Edge(e.gender_concept_id.toLong, -e.person_id.toLong, PatientGenderEdgeProperty(Enumerations.BELONGS)))
     //println("Gender Edges")
 
     val year=Calendar.getInstance().get(Calendar.YEAR);
     
-    val patageEdges: RDD[Edge[EdgeProperty]] = patients.map(e => Edge(-e.person_id.toLong, -10*((year - e.year_of_birth) / 10), PatientAgeEdgeProperty(Age(-e.person_id.toLong, -10*((year - e.year_of_birth) / 10)))))
-    val agepatEdges: RDD[Edge[EdgeProperty]] = patients.map(e => Edge(-10*((year - e.year_of_birth) / 10), -e.person_id.toLong, PatientAgeEdgeProperty(Age(-e.person_id.toLong, -10*((year - e.year_of_birth) / 10)))))
+    val patageEdges: RDD[Edge[EdgeProperty]] = patients.map(e => Edge(-e.person_id.toLong, -10*((year - e.year_of_birth) / 10), PatientAgeEdgeProperty(Enumerations.BELONGS)))
+    val agepatEdges: RDD[Edge[EdgeProperty]] = patients.map(e => Edge(-10*((year - e.year_of_birth) / 10), -e.person_id.toLong, PatientAgeEdgeProperty(Enumerations.BELONGS)))
     //println("Age Edges")
 
     val loincVertices: RDD[(VertexId, VertexProperty)] = loinc.map(a=>(a.concept_id.toLong, ObservationProperty(a.concept_id)))

@@ -52,11 +52,11 @@ case class PatientDiagnosticEdgeProperty(diagnostic: Diagnostic) extends EdgePro
 
 case class PatientMedicationEdgeProperty(medication: Medication) extends EdgeProperty
 
-case class PatientGenderEdgeProperty(gender: Gender) extends EdgeProperty
+case class PatientGenderEdgeProperty(relation: Enumerations.Relation) extends EdgeProperty
 
-case class PatientAgeEdgeProperty(age: Age) extends EdgeProperty
+case class PatientAgeEdgeProperty(relation: Enumerations.Relation) extends EdgeProperty
 
-case class PatientRaceEdgeProperty(race: Race) extends EdgeProperty
+case class PatientRaceEdgeProperty(relation: Enumerations.Relation) extends EdgeProperty
 
 case class ConceptAncestorEdgeProperty(relation: Enumerations.Relation) extends EdgeProperty
 
