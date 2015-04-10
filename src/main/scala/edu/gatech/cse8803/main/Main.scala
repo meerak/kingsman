@@ -73,7 +73,7 @@ object Main {
         val graph = GraphLoader.load(patient, medication, labResult, diagnostic, age, gender, race, rxnorm, loinc, snomed, race_ancestors, snomed_ancestors, rxnorm_ancestors, race_relations, snomed_relations, rxnorm_relations, loinc_relations)
         endTime = System.currentTimeMillis();
         println(s"Graph constructed in ${endTime - startTime} ms")
-    
+        
         startTime = System.currentTimeMillis();
         LOG.info("Started Minimum similarity")
         testMinimum(graph)
@@ -97,7 +97,7 @@ object Main {
         testRandomWalk(graph)
         endTime = System.currentTimeMillis();
         println(s"Random walk completed in ${endTime - startTime} ms")  
-    
+
         startTime = System.currentTimeMillis();
         LOG.info("KNN")
         testKNN(graph)
@@ -109,7 +109,7 @@ object Main {
     {
         val patientIDtoLookup = "-87907000001"
         
-        val answerTop10patients = MinSimilarity.MinSimilarityOneVsAll(graphInput, patientIDtoLookup)
+        val answerTop10patients = MinSimilarity.MinSimilarityOneVsAll(graphInput, patientIDtoLookup, null)
         println("Minimum values")
         answerTop10patients.foreach(println)
 
@@ -120,7 +120,7 @@ object Main {
     {
         val patientIDtoLookup = "-87907000001"
         
-        val answerTop10patients = CosineSimilarity.cosineSimilarityOneVsAll(graphInput, patientIDtoLookup)
+        val answerTop10patients = CosineSimilarity.cosineSimilarityOneVsAll(graphInput, patientIDtoLookup, null)
         println("Cosine values")
         answerTop10patients.foreach(println)
 
@@ -131,7 +131,7 @@ object Main {
     {
         val patientIDtoLookup = "-87907000001"
 
-        val answerTop10patients = Jaccard.jaccardSimilarityOneVsAll(graphInput, patientIDtoLookup)
+        val answerTop10patients = Jaccard.jaccardSimilarityOneVsAll(graphInput, patientIDtoLookup, null)
         println("Jaccard values")
         answerTop10patients.foreach(println)
 
@@ -141,17 +141,18 @@ object Main {
     def testRandomWalk( graphInput:  Graph[VertexProperty, EdgeProperty] ) = 
     {
         val patientIDtoLookup = "-87907000001"
-        val answerTop10patients = RandomWalk.randomWalkOneVsAll(graphInput, patientIDtoLookup)
+        val answerTop10patients = RandomWalk.randomWalkOneVsAll(graphInput, patientIDtoLookup, null)
         println("Random walk values")
         answerTop10patients.foreach(println)
 
         null
     }
 
-    def testKNN( graphInput:  Graph[VertexProperty, EdgeProperty] ) = 
+    def testKNN(graphInput: Graph[VertexProperty, EdgeProperty]) = 
     {
-        val patientIDtoLookup = "-87907000001" //"-94169102" - dead
-        val (answerTop10patients, knnanswer) = KNN.knnOneVsAll(graphInput, patientIDtoLookup)
+        val patientIDtoLookup = "-87907000001"
+
+        val (answerTop10patients, knnanswer) = KNN.knnOneVsAll(graphInput, patientIDtoLookup, null, "Minimum")
         println("KNN answer", knnanswer)
 
         val (answerTop10diag, answerTop10med, answerTop10lab, answerTop10race, answerTop10gender, answerTop10age) = KNN.summarize(graphInput, answerTop10patients)
@@ -174,19 +175,20 @@ object Main {
         println("Top Age")
         answerTop10age.foreach(println)
 
-        //val knnanswer = graphInput.vertices.filter(t=>(t._1 < 0)).collect()
-        //val res = Array[Double]()
-        /*
-        for(x <- knnanswer){
-            val temp = KNN.knnAllVsAll(graphInput, x._1.toString)
-            res :+  temp
-            println(x._1, x._2.asInstanceOf[PatientProperty].dead, temp)
-        }
-        //.map(x => (x._1, x._2.asInstanceOf[PatientProperty].dead, ))
-        //val t = knnanswer.map(x=> (x._1, x._2.asInstanceOf[PatientProperty].dead)).zip(res)
-        //foreach(println)
-        */
+        null
+    }
 
+    def testKNN_AUC( graphInput:  Graph[VertexProperty, EdgeProperty] ) = 
+    {
+        val casecontrol = Source.fromFile("/home/sneha/kingsman/casecontrol.txt").getLines.toList
+        val knnvertices = graphInput.vertices.filter(t => (casecontrol.contains((-1 * t._1).toString))).collect()
+        val res = Array[Double]()
+        for(x <- knnvertices)
+        {
+            val temp = KNN.knnOneVsAll(graphInput, x._1.toString, casecontrol, "Minimum")   
+            res :+  temp
+            println(x._2.asInstanceOf[PatientProperty].dead,temp._2)
+        }
         null
     }
 
@@ -207,7 +209,6 @@ object Main {
             0, rrs_count,10
             ,r=> (Observation(r.getInt("observation_id"), r.getLong("person_id"), r.getInt("observation_concept_id"), r.getString("observation_date"), r.getString("observation_time"), r.getFloat("value_as_number"), r.getString("value_as_string"), r.getInt("value_as_concept_id"), r.getInt("unit_concept_id"), r.getFloat("range_low"), r.getFloat("range_high"), r.getInt("observation_type_concept_id"), r.getInt("associated_provider_id"), 0, r.getInt("relevant_condition_concept_id"), r.getString("observation_source_value"), r.getString("units_source_value"))))
         
-        print("Observation count",labResults.count)
         connection.close()
         labResults
     }
@@ -229,7 +230,6 @@ object Main {
             0, rrs_count,10
             ,rs=> (PatientProperty(rs.getLong("person_id"), rs.getInt("gender_concept_id"), rs.getInt("year_of_birth"), rs.getInt("month_of_birth"), rs.getInt("day_of_birth"), rs.getInt("race_concept_id"), rs.getInt("ethnicity_concept_id"), rs.getInt("location_id"), rs.getInt("provider_id"), rs.getInt("care_site_id"), rs.getString("person_source_value"), rs.getString("gender_source_value"), rs.getString("race_source_value"), rs.getString("ethnicity_source_value"), if(rs.getString("death_date")!=null) 1 else 0 )))
         
-        print("Patients count",patients.count)
         connection.close()
         patients
     }
@@ -245,14 +245,12 @@ object Main {
         val rrs_count= rrs.getInt("cnt")
         
         val conn_str = s"jdbc:postgresql://" + conf.getString("db-setting.host") + ":" +  conf.getString("db-setting.port") + "/" + dbname + "?user=" + conf.getString("db-setting.user") + "&password=" + conf.getString("db-setting.password")
-        //DriverManager.getConnection(conn_str)
 
         val diagnostics = new JdbcRDD(sqlContext.sparkContext, () => DriverManager.getConnection(conn_str),
             "SELECT * FROM condition_occurrence where ? <= condition_occurrence_id and condition_occurrence_id <= ? ;",
             0, rrs_count,10
             ,ds=> (Diagnostic(ds.getInt("condition_occurrence_id"), ds.getLong("person_id"), ds.getInt("condition_concept_id"), ds.getString("condition_start_date"), ds.getString("condition_end_date"), ds.getInt("condition_type_concept_id"), ds.getString("stop_reason"), ds.getInt("associated_provider_id"), ds.getBigDecimal("visit_occurrence_id"), ds.getString("condition_source_value"))))
     
-        print("Diagnostics", diagnostics.count)
         connection.close()
         diagnostics
     }
@@ -274,7 +272,6 @@ object Main {
             0, rrs_count,10
             ,ms=> (Medication(ms.getInt("drug_exposure_id"), ms.getLong("person_id"), ms.getInt("drug_concept_id"), ms.getString("drug_exposure_start_date"), ms.getString("drug_exposure_end_date"), ms.getInt("drug_type_concept_id"), ms.getString("stop_reason"), ms.getInt("refills"), ms.getInt("quantity"), ms.getInt("days_supply"), ms.getString("sig"), ms.getInt("prescribing_provider_id"), ms.getBigDecimal("visit_occurrence_id"), ms.getInt("relevant_condition_concept_id"), ms.getString("drug_source_value"))))
         
-        print("Medication count", medication.count)
         connection.close()
         medication
     }
@@ -297,7 +294,6 @@ object Main {
             0, rrs_count,10
             ,rds => (Vocabulary(rds.getInt("concept_id"), rds.getString("concept_name"), rds.getString("concept_code"))))
         
-        println("RxNorm count", rxnorm.count)
         connection.close()
         rxnorm
     }
@@ -320,7 +316,6 @@ object Main {
             0, rrs_count, 10
             ,ras => (ConceptAncestor(ras.getInt("ancestor_concept_id"), ras.getInt("descendant_concept_id"))))
         
-        println("RxNorm ancestor count", rxnorm_ancestor.count)
         connection.close()
         rxnorm_ancestor
     }
@@ -343,7 +338,6 @@ object Main {
         ,0, rrs_count, 10
         ,ras => (ConceptRelation(ras.getInt("concept_id_1"), ras.getInt("concept_id_2"), ras.getString("relationship_name"))))
         
-        println("Rxnorm Relationship Count", rxnorm_relations.count)
         connection.close()
         rxnorm_relations
     }
@@ -366,7 +360,6 @@ object Main {
         ,0, rrs_count, 10
         ,ras => (ConceptRelation(ras.getInt("concept_id_1"), ras.getInt("concept_id_2"), ras.getString("relationship_name"))))
         
-        println("Snomed Relationship Count", snomed_relations.count)
         connection.close()
         snomed_relations
     }
@@ -389,7 +382,6 @@ object Main {
         ,0, rrs_count, 10
         ,ras => (ConceptRelation(ras.getInt("concept_id_1"), ras.getInt("concept_id_2"), ras.getString("relationship_name"))))
         
-        println("Loinc Relationship Count", loinc_relations.count)
         connection.close()
         loinc_relations
     }
@@ -412,7 +404,6 @@ object Main {
         ,0, rrs_count, 10
         ,ras => (ConceptRelation(ras.getInt("concept_id_1"), ras.getInt("concept_id_2"), ras.getString("relationship_name"))))
         
-        println("Rxnorm Relationship Count", race_relations.count)
         connection.close()
         race_relations
     }
@@ -436,7 +427,6 @@ object Main {
             0, rrs_count, 10
             ,rds => (Vocabulary(rds.getInt("concept_id"), rds.getString("concept_name"), rds.getString("concept_code"))))
         
-        println("Snomed count", snomed.count)
         connection.close()
         snomed
     }
@@ -459,7 +449,6 @@ object Main {
             0, rrs_count, 10
             ,ras => (ConceptAncestor(ras.getInt("ancestor_concept_id"), ras.getInt("descendant_concept_id"))))
         
-        println("Snomed ancestor count", snomed_ancestor.count)
         connection.close()
         snomed_ancestor
     }
@@ -482,7 +471,6 @@ object Main {
             0, rrs_count,10
             ,rds => (Vocabulary(rds.getInt("concept_id"), rds.getString("concept_name"), rds.getString("concept_code"))))
         
-        println("Loinc count", loinc.count)
         connection.close()
         loinc
     }
@@ -505,7 +493,6 @@ object Main {
             0, rrs_count, 10
             ,rds => (Vocabulary(rds.getInt("concept_id"), rds.getString("concept_name"), rds.getString("concept_code"))))
         
-        println("Race count", race.count)
         connection.close()
         race
     }
@@ -528,7 +515,6 @@ object Main {
             0, rrs_count, 10
             ,ras => (ConceptAncestor(ras.getInt("ancestor_concept_id"), ras.getInt("descendant_concept_id"))))
         
-        println("Race ancestor count", race_ancestor.count)
         connection.close()
         race_ancestor
     }
@@ -551,7 +537,6 @@ object Main {
             0, rrs_count, 10
             ,rds => (Vocabulary(rds.getInt("concept_id"), rds.getString("concept_name"), rds.getString("concept_code"))))
         
-        println("Gender count", gender.count)
         connection.close()
         gender
     }
@@ -559,16 +544,12 @@ object Main {
     def loadRddRawDataAge(sc: SparkContext): RDD[AgeProperty] =
     {
         val age: RDD[AgeProperty] = sc.parallelize(List(AgeProperty(-10), AgeProperty(-20), AgeProperty(-30), AgeProperty(-40), AgeProperty(-50), AgeProperty(-60), AgeProperty(-70), AgeProperty(-80), AgeProperty(-90), AgeProperty(-100)))
-        println("Age", age.count)
         age
     }
 
     def createContext(appName: String, masterUrl: String): SparkContext = 
     {
-        //val conf = new SparkConf().setAppName(appName)
-         val conf = new SparkConf().setAppName(appName)
-         //.set("spark.driver.memory", "10g").set("spark.executor.memory", "10g")
-         //setMaster(masterUrl).
+        val conf = new SparkConf().setAppName(appName)
         new SparkContext(conf)
     }
 
