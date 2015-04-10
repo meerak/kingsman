@@ -28,17 +28,17 @@ abstract class VertexProperty
 
 case class PatientProperty(person_id: Long, gender_concept_id: Integer, year_of_birth: Integer, month_of_birth: Integer, day_of_birth: Integer, race_concept_id: Integer, ethnicity_concept_id: Integer, location_id: Integer, provider_id: Integer, care_site_id: Integer, person_source_value: String, gender_source_value: String, race_source_value: String, ethnicity_source_value: String, dead:Integer) extends VertexProperty
 
-case class ObservationProperty(observation_concept_id: Integer) extends VertexProperty
+case class ObservationProperty(observation_concept_id: Integer, observation_concept_name: String) extends VertexProperty
 
-case class DiagnosticProperty(condition_concept_id: Integer) extends VertexProperty
+case class DiagnosticProperty(condition_concept_id: Integer, condition_concept_name: String) extends VertexProperty
 
-case class MedicationProperty(drug_concept_id: Integer) extends VertexProperty
+case class MedicationProperty(drug_concept_id: Integer, drug_concept_name: String) extends VertexProperty
 
-case class GenderProperty(gender_concept_id: Integer) extends VertexProperty
+case class GenderProperty(gender_concept_id: Integer, gender_concept_name: String) extends VertexProperty
 
 case class AgeProperty(age_range: Integer) extends VertexProperty
 
-case class RaceProperty(race_concept_id: Integer) extends VertexProperty
+case class RaceProperty(race_concept_id: Integer, race_concept_name: String) extends VertexProperty
 
 case class VocabularyProperty(concept_id: Integer) extends VertexProperty
 
