@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory
 object GraphLoader 
 {
     private val LOG = LoggerFactory.getLogger(getClass())
-    def load(patients: RDD[PatientProperty], medications: RDD[Medication], labResults:RDD[Observation], diagnostics: RDD[Diagnostic], age: RDD[AgeProperty], gender: RDD[Vocabulary], race: RDD[Vocabulary], rxnorm:RDD[Vocabulary], loinc: RDD[Vocabulary], snomed:RDD[Vocabulary], race_ancestors:RDD[ConceptAncestor], snomed_ancestors:RDD[ConceptAncestor], rxnorm_ancestors:RDD[ConceptAncestor], race_relations:RDD[ConceptRelation], snomed_relations:RDD[ConceptRelation], rxnorm_relations:RDD[ConceptRelation], loinc_relations:RDD[ConceptRelation]): Graph[VertexProperty, EdgeProperty] = 
+    def load(patients: RDD[PatientProperty], medications: RDD[Medication], labResults:RDD[Observation], diagnostics: RDD[Diagnostic], age: RDD[AgeProperty], gender: RDD[Vocabulary], race: RDD[Vocabulary], rxnorm:RDD[Vocabulary], loinc: RDD[Vocabulary], snomed:RDD[Vocabulary], race_ancestors:RDD[ConceptAncestor], snomed_ancestors:RDD[ConceptAncestor], rxnorm_ancestors:RDD[ConceptAncestor], race_relations:RDD[ConceptRelation], snomed_relations:RDD[ConceptRelation], rxnorm_relations:RDD[ConceptRelation], loinc_relations:RDD[ConceptRelation]): (RDD[(VertexId, VertexProperty)], RDD[Edge[EdgeProperty]])= 
     {
     val startTime = System.currentTimeMillis();
     LOG.info("Building graph")
@@ -84,14 +84,15 @@ object GraphLoader
     val edges = edges1.union(rxnormRelationEdges).union(loincRelationEdges).union(snomedRelationEdges).union(raceRelationEdges).union(patdiagEdges).union(diagpatEdges).union(snomedEdges).union(snomedDescendantEdges).union(patlabEdges).union(labpatEdges).union(medicationEdges).union(rxnormEdges).union(rxnormDescendantEdges).union(revMedicationEdges)
     //println("Edges Done", edges.count)
 
-    val graph: Graph[VertexProperty, EdgeProperty] = Graph(vertices, edges)
+    /*val graph: Graph[VertexProperty, EdgeProperty] = Graph(vertices, edges)
     println("all vertices 1 : ", graph.vertices.count)
-    println("all edges 1: ", graph.edges.count)
+    println("all edges 1: ", graph.edges.count)*/
     
     val endTime = System.currentTimeMillis();
-    LOG.info("Graph built in " + (endTime - startTime) + "ms")
+    LOG.info("Edges/vertices created in " + (endTime - startTime) + "ms")
 
-    graph
+    //graph
+    (vertices, edges)
   }
   
   def runPageRank(graph:  Graph[VertexProperty, EdgeProperty] ): List[(Long, Double)] =

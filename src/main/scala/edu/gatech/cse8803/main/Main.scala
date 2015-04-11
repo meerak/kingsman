@@ -1,4 +1,4 @@
-package edu.gatech.cse8803.main
+package spark.jobserver
 
 import edu.gatech.cse8803.graphconstruct.GraphLoader
 import edu.gatech.cse8803.ioutils.CSVUtils
@@ -6,6 +6,8 @@ import edu.gatech.cse8803.metrics._
 import edu.gatech.cse8803.model._
 import edu.gatech.cse8803.randomwalk._
 import edu.gatech.cse8803.main._
+
+import org.apache.spark._
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SQLContext
@@ -17,187 +19,14 @@ import org.postgresql.Driver
 import scala.io.Source
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import scala.util.Try
 
-object Similarity  extends SparkJob {
-    override def runJob(sc:SparkContext, jobConfig: Config): Any = {
-        val str =  sc.parallelize(config.getString("input.string").split(" ").toSeq)
-        str.map((_,1).reduceByKey(_+_).collect().toMap
-    }
-    override def validate(sc:SparkContext, config: Config): SparkJobValidation = {
-        Try(config.getString("input.string"))
-            .map(x=>SparkJobValid)
-            .getOrElse(SparkJobInvalid("No input string"))
-    }
-}
+object Main extends SparkJob with NamedRddSupport {
 
-object Main {
-    private val LOG = LoggerFactory.getLogger(getClass())
-
-    def main(args: Array[String]) {
+    /*def main(args: Array[String]) {
         val sc = createContext
-        val sqlContext = new SQLContext(sc)
-
-        /** get configuration*/
-        val conf = ConfigFactory.load()
-
-        //SparkConf sparkConf = new SparkConf().setAppName("Main").setMaster("local[2]").set("spark.executor.memory","5g");
-        //val SparkConf = new SparkConf().setAppName("Main").setMaster("spark://myhost:7077")
-
-        //conf.setMaster("local[2]")
-
-        /** initialize loading of data */
-        //loadRddRawData2(sqlContext, conf);
-        var startTime = System.currentTimeMillis();
-        LOG.info("Load data from database into RDD")
-
-        val patient = loadRddRawDataPatients(sqlContext, conf)
-        val medication = loadRddRawDataMedication(sqlContext, conf)
-        val diagnostic = loadRddRawDataDiagnostics(sqlContext, conf)
-        val labResult = loadRddRawDataLabResults(sqlContext, conf)
-
-        val rxnorm = loadRddRawDataRxNorm( sqlContext, conf)
-        val rxnorm_ancestors = loadRddRawDataRxNormAncestor( sqlContext, conf)
-        val rxnorm_relations = loadRddRawDataVocabRxnormRelation( sqlContext, conf)
-
-        val snomed = loadRddRawDataSnomed(sqlContext, conf)
-        val snomed_ancestors = loadRddRawDataSnomedAncestor( sqlContext, conf)
-        val snomed_relations = loadRddRawDataVocabSnomedRelation( sqlContext, conf)
-
-        val race = loadRddRawDataRace(sqlContext, conf)
-        val race_ancestors = loadRddRawDataRaceAncestor(sqlContext, conf)
-        val race_relations = loadRddRawDataVocabRaceRelation( sqlContext, conf)
-
-        val loinc = loadRddRawDataLoinc(sqlContext, conf)
-        val loinc_relations = loadRddRawDataVocabLoincRelation( sqlContext, conf)
-
-        val gender = loadRddRawDataGender(sqlContext, conf)
-
-        val age = loadRddRawDataAge(sc)
-
-        var endTime = System.currentTimeMillis()
-        println(s"Data loaded in ${endTime - startTime} ms")
-        
-        startTime = System.currentTimeMillis();
-        LOG.info("Started cosine similarity")
-        val graph = GraphLoader.load(patient, medication, labResult, diagnostic, age, gender, race, rxnorm, loinc, snomed, race_ancestors, snomed_ancestors, rxnorm_ancestors, race_relations, snomed_relations, rxnorm_relations, loinc_relations)
-        endTime = System.currentTimeMillis();
-        println(s"Graph constructed in ${endTime - startTime} ms")
-    
-        startTime = System.currentTimeMillis();
-        LOG.info("Started Minimum similarity")
-        testMinimum(graph)
-        endTime = System.currentTimeMillis();
-        println(s"Minimum similarity calculated in ${endTime - startTime} ms")
-
-        startTime = System.currentTimeMillis();
-        LOG.info("Started cosine similarity")
-        testCosine(graph)
-        endTime = System.currentTimeMillis();
-        println(s"Cosine similarity calculated in ${endTime - startTime} ms")
-
-        startTime = System.currentTimeMillis();
-        LOG.info("Started cosine similarity")
-        testJaccard(graph)
-        endTime = System.currentTimeMillis();
-        println(s"Jaccard coefficient calculated in ${endTime - startTime} ms")
-
-        startTime = System.currentTimeMillis();
-        LOG.info("Started random walk")
-        testRandomWalk(graph)
-        endTime = System.currentTimeMillis();
-        println(s"Random walk completed in ${endTime - startTime} ms")  
-    
-        startTime = System.currentTimeMillis();
-        LOG.info("KNN")
-        testKNN(graph)
-        endTime = System.currentTimeMillis();
-        println(s"K - Nearest Neighbor completed in ${endTime - startTime} ms") 
-    }
-
-    def testMinimum(graphInput:  Graph[VertexProperty, EdgeProperty]) = 
-    {
-        val patientIDtoLookup = "-87907000001"
-        
-        val answerTop10patients = MinSimilarity.MinSimilarityOneVsAll(graphInput, patientIDtoLookup)
-        println("Minimum values")
-        answerTop10patients.foreach(println)
-
-        null
-    }    
-
-    def testCosine(graphInput:  Graph[VertexProperty, EdgeProperty]) = 
-    {
-        val patientIDtoLookup = "-87907000001"
-        
-        val answerTop10patients = CosineSimilarity.cosineSimilarityOneVsAll(graphInput, patientIDtoLookup)
-        println("Cosine values")
-        answerTop10patients.foreach(println)
-
-        null
-    }
-
-    def testJaccard(graphInput:  Graph[VertexProperty, EdgeProperty]) = 
-    {
-        val patientIDtoLookup = "-87907000001"
-
-        val answerTop10patients = Jaccard.jaccardSimilarityOneVsAll(graphInput, patientIDtoLookup)
-        println("Jaccard values")
-        answerTop10patients.foreach(println)
-
-        null
-    }
-  
-    def testRandomWalk( graphInput:  Graph[VertexProperty, EdgeProperty] ) = 
-    {
-        val patientIDtoLookup = "-87907000001"
-        val answerTop10patients = RandomWalk.randomWalkOneVsAll(graphInput, patientIDtoLookup)
-        println("Random walk values")
-        answerTop10patients.foreach(println)
-
-        null
-    }
-
-    def testKNN( graphInput:  Graph[VertexProperty, EdgeProperty] ) = 
-    {
-        val patientIDtoLookup = "-87907000001" //"-94169102" - dead
-        val (answerTop10patients, knnanswer) = KNN.knnOneVsAll(graphInput, patientIDtoLookup)
-        println("KNN answer", knnanswer)
-
-        val (answerTop10diag, answerTop10med, answerTop10lab, answerTop10race, answerTop10gender, answerTop10age) = KNN.summarize(graphInput, answerTop10patients)
-
-        println("Top Med")
-        answerTop10med.foreach(println)
-
-        println("Top Diag")
-        answerTop10diag.foreach(println)
-
-        println("Top Lab")
-        answerTop10lab.foreach(println)
-
-        println("Top Race")
-        answerTop10race.foreach(println)
-
-        println("Top Gender")
-        answerTop10gender.foreach(println)
-
-        println("Top Age")
-        answerTop10age.foreach(println)
-
-        //val knnanswer = graphInput.vertices.filter(t=>(t._1 < 0)).collect()
-        //val res = Array[Double]()
-        /*
-        for(x <- knnanswer){
-            val temp = KNN.knnAllVsAll(graphInput, x._1.toString)
-            res :+  temp
-            println(x._1, x._2.asInstanceOf[PatientProperty].dead, temp)
-        }
-        //.map(x => (x._1, x._2.asInstanceOf[PatientProperty].dead, ))
-        //val t = knnanswer.map(x=> (x._1, x._2.asInstanceOf[PatientProperty].dead)).zip(res)
-        //foreach(println)
-        */
-
-        null
-    }
+        runJob(sc, ConfigFactory.parseString(""))
+    }*/
 
     def loadRddRawDataLabResults(sqlContext: SQLContext, conf:Config) = {
         val dbname = conf.getString("db-setting.database")
@@ -584,4 +413,105 @@ object Main {
     def createContext(appName: String): SparkContext = createContext(appName, "local")
 
     def createContext: SparkContext = createContext("CSE 8803 Homework Three Application", "local")
+    
+    override def runJob(sc:SparkContext, config: Config): Any = {
+        
+        val patientIDtoLookup =  config.getString("input.string")
+        val sqlContext = new SQLContext(sc)
+
+        val LOG = LoggerFactory.getLogger(getClass())
+        
+        val conf = ConfigFactory.load()
+        var startTime = System.currentTimeMillis();
+        LOG.info("Load data from database into RDD")
+
+        val patient = loadRddRawDataPatients(sqlContext, conf)
+        val medication = loadRddRawDataMedication(sqlContext, conf)
+        val diagnostic = loadRddRawDataDiagnostics(sqlContext, conf)
+        val labResult = loadRddRawDataLabResults(sqlContext, conf)
+
+        val rxnorm = loadRddRawDataRxNorm( sqlContext, conf)
+        val rxnorm_ancestors = loadRddRawDataRxNormAncestor( sqlContext, conf)
+        val rxnorm_relations = loadRddRawDataVocabRxnormRelation( sqlContext, conf)
+
+        val snomed = loadRddRawDataSnomed(sqlContext, conf)
+        val snomed_ancestors = loadRddRawDataSnomedAncestor( sqlContext, conf)
+        val snomed_relations = loadRddRawDataVocabSnomedRelation( sqlContext, conf)
+
+        val race = loadRddRawDataRace(sqlContext, conf)
+        val race_ancestors = loadRddRawDataRaceAncestor(sqlContext, conf)
+        val race_relations = loadRddRawDataVocabRaceRelation( sqlContext, conf)
+
+        val loinc = loadRddRawDataLoinc(sqlContext, conf)
+        val loinc_relations = loadRddRawDataVocabLoincRelation( sqlContext, conf)
+
+        val gender = loadRddRawDataGender(sqlContext, conf)
+
+        val age = loadRddRawDataAge(sc)
+        var endTime = System.currentTimeMillis()
+        println(s"Data loaded in " + (endTime - startTime) +"ms")
+    
+        val (v,e) = GraphLoader.load(patient, medication, labResult, diagnostic, age, gender, race, rxnorm, loinc, snomed, race_ancestors, snomed_ancestors, rxnorm_ancestors, race_relations, snomed_relations, rxnorm_relations, loinc_relations)
+
+        //val vertices:RDD[(VertexId, VertexProperty)] = graph.vertices
+        //val edges:RDD[Edge[EdgeProperty]]  = graph.edges
+        namedRdds.getOrElseCreate("vertices", v)
+        namedRdds.getOrElseCreate("edges", e)
+        
+        //namedRdds.getNames.foreach(println)
+        null
+    }
+    override def validate(sc:SparkContext, config: Config): SparkJobValidation = {
+        SparkJobValid
+    }
+}
+
+object SimilarityMin extends SparkJob with NamedRddSupport {
+
+   /* def main(args: Array[String]) {
+        val sc = createContext
+        runJob(sc, ConfigFactory.parseString(""))
+    }*/
+
+    override def runJob(sc:SparkContext, config: Config): Any = {
+        
+        val LOG = LoggerFactory.getLogger(getClass())
+        val patientIDtoLookup =  config.getString("input.string")
+        
+        val vertices = this.namedRdds.get[(VertexId, VertexProperty)]("vertices").get 
+        val edges = this.namedRdds.get[Edge[EdgeProperty]]("edges").get 
+        
+        var startTime = System.currentTimeMillis();
+        val graph = Graph(vertices, edges)
+        var endTime = System.currentTimeMillis();
+        LOG.info("Graph created in " + (endTime - startTime) +" ms")
+        
+        startTime = System.currentTimeMillis();
+        LOG.info("Started Minimum similarity")
+        val answerTop10patients = MinSimilarity.MinSimilarityOneVsAll(graph, patientIDtoLookup)
+        endTime = System.currentTimeMillis();
+        println(s"Minimum similarity calculated in " + (endTime - startTime) +"ms")   
+
+        answerTop10patients//.foreach(println)
+       // null
+    }
+    override def validate(sc:SparkContext, config: Config): SparkJobValidation = {
+        Try(config.getString("input.string"))
+            .map(x=>SparkJobValid)
+            .getOrElse(SparkJobInvalid("No input string"))
+    }
+
+     def createContext(appName: String, masterUrl: String): SparkContext = 
+    {
+        //val conf = new SparkConf().setAppName(appName)
+         val conf = new SparkConf().setAppName(appName)
+         //.set("spark.driver.memory", "10g").set("spark.executor.memory", "10g")
+         //setMaster(masterUrl).
+        new SparkContext(conf)
+    }
+
+    def createContext(appName: String): SparkContext = createContext(appName, "local")
+
+    def createContext: SparkContext = createContext("CSE 8803 Homework Three Application", "local")
+    
 }

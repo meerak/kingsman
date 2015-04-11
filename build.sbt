@@ -10,10 +10,6 @@ scalaVersion := "2.10.4"
 
 logLevel := Level.Info
 
-resolvers ++= Seq(
-  Resolver.sonatypeRepo("releases"),
-  Resolver.sonatypeRepo("snapshots")
-)
 resolvers += "Job Server Bintray" at "https://dl.bintray.com/spark-jobserver/maven"
 
 libraryDependencies ++= Seq(
@@ -22,7 +18,7 @@ libraryDependencies ++= Seq(
   "com.databricks"    % "spark-csv_2.10"               % "0.1",
   "com.chuusai"       % "shapeless_2.10.4"             % "2.0.0",
   "org.apache.spark"  % "spark-graphx_2.10"            % "1.2.1",
-  "org.postgresql" % "postgresql" % "9.3-1102-jdbc41",
+  "org.postgresql" % "postgresql" % "9.3-1103-jdbc41",
   "org.apache.commons" % "commons-dbcp2" % "2.0.1",
   "com.typesafe" % "config" % "1.2.1",
  "org.slf4j" % "slf4j-api" % "1.7.12",

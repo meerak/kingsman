@@ -7,9 +7,9 @@ import scala.collection.mutable.Map
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
-object MinSimilarity 
+object CosineSimilarity 
 {
-  def MinSimilarityOneVsAll(graph: Graph[VertexProperty, EdgeProperty], patientID: String): List[String] = 
+  def cosineSimilarityOneVsAll(graph: Graph[VertexProperty, EdgeProperty], patientID: String): List[String] = 
   {
         val bcSrcVertexId = graph.edges.sparkContext.broadcast(patientID.toLong)
 
