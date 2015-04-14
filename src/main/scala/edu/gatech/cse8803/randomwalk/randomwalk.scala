@@ -6,22 +6,29 @@ import org.apache.spark.SparkContext._
 
 object RandomWalk 
 {
-	def randomWalkOneVsAll(graph: Graph[VertexProperty, EdgeProperty], patientID: String , numIter: Int = 10, alpha: Double = 0.15): List[String] = 
+	def randomWalkOneVsAll(graph: Graph[VertexProperty, EdgeProperty], patientID: String, casecontrol: List[String], numIter: Int = 10, alpha: Double = 0.15): List[String] = 
 	{
 		val bcStartIndex = graph.vertices.sparkContext.broadcast(patientID.toLong)
 
 	    var rankGraph: Graph[Double, Double] = graph
-	      .outerJoinVertices(graph.outDegrees) 
-	      { 
+	    .outerJoinVertices(graph.outDegrees) 
+	    { 
 	      	(vid, vdata, deg) => deg.getOrElse(0) 
-	      }
-	      .mapTriplets(e => 1.0 / e.srcAttr, TripletFields.Src)
-	      .mapVertices
-	      { 
-	      	(id, attr) => 
-	      		if(id == bcStartIndex.value) 1.0 
-	      		else 0.0
-      	  }
+	    }
+	    .mapTriplets(e => 1.0 / e.srcAttr, TripletFields.Src)
+	    .mapVertices
+	    { 
+	    	(id, attr) => 
+	      	if(id == bcStartIndex.value) 
+	      		1.0 
+	     	else 
+	     		0.0
+      	}
+
+      	if(casecontrol != null)
+      	{
+      		rankGraph.vertices.filter(g => casecontrol.contains((-1 * g._1).toString))
+      	}
 
 	    var iteration = 0
 	    var prevRankGraph: Graph[Double, Double] = null
@@ -62,6 +69,5 @@ object RandomWalk
       	.collect{case id: Long => id}
       	.toList
       	.map(_.toString)
-
   	}
 }

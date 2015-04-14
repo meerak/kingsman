@@ -18,93 +18,63 @@ object GraphLoader
     LOG.info("Building graph")
         
     val patientVertices: RDD[(VertexId, VertexProperty)] = patients.map(p => ((-p.person_id).toLong, p))
-    //println("Patients")
 
-    val ageVertices: RDD[(VertexId, VertexProperty)] = age.map(a => (-a.age_range.toLong, a))
-    //println("Age")
+    val ageVertices: RDD[(VertexId, VertexProperty)] = age.map(a => (a.age_range.toLong, a))
 
-    val genderVertices: RDD[(VertexId, VertexProperty)] = gender.map(a=>(a.concept_id.toLong, GenderProperty(a.concept_id)))
-    //println("Gender")
+    val genderVertices: RDD[(VertexId, VertexProperty)] = gender.map(a=>(a.concept_id.toLong, GenderProperty(a.concept_id, a.concept_name)))
 
-    val raceVertices: RDD[(VertexId, VertexProperty)] = race.map(a=>(a.concept_id.toLong, RaceProperty(a.concept_id)))
-    //println("Race")
+    val raceVertices: RDD[(VertexId, VertexProperty)] = race.map(a=>(a.concept_id.toLong, RaceProperty(a.concept_id, a.concept_name)))
     val raceEdges: RDD[Edge[EdgeProperty]] = race_ancestors.map(a=>Edge(a.descendent_concept_id.toLong, a.ancestor_concept_id.toLong, ConceptAncestorEdgeProperty(Enumerations.ISA)))
     val raceDescendantEdges: RDD[Edge[EdgeProperty]] = race_ancestors.map(a=>Edge(a.ancestor_concept_id.toLong, a.descendent_concept_id.toLong, ConceptAncestorEdgeProperty(Enumerations.CHILD)))
-    //println("Race Ancestors")
     val raceRelationEdges: RDD[Edge[EdgeProperty]] = race_relations.map(a=>Edge(a.source.toLong, a.dest.toLong, ConceptRelationEdgeProperty(a.relation)))
 
     val patraceEdges:RDD[Edge[EdgeProperty]] = patients.map(e => Edge(-e.person_id.toLong, e.race_concept_id.toLong, PatientRaceEdgeProperty(Enumerations.BELONGS)))
     val racepatEdges:RDD[Edge[EdgeProperty]] = patients.map(e => Edge(e.race_concept_id.toLong, -e.person_id.toLong, PatientRaceEdgeProperty(Enumerations.BELONGS)))
-    //println("Race Edges")
 
     val patgenEdges: RDD[Edge[EdgeProperty]] = patients.map(e => Edge(-e.person_id.toLong, e.gender_concept_id.toLong, PatientGenderEdgeProperty(Enumerations.BELONGS)))
     val genpatEdges:RDD[Edge[EdgeProperty]] = patients.map(e => Edge(e.gender_concept_id.toLong, -e.person_id.toLong, PatientGenderEdgeProperty(Enumerations.BELONGS)))
-    //println("Gender Edges")
 
     val year=Calendar.getInstance().get(Calendar.YEAR);
     
     val patageEdges: RDD[Edge[EdgeProperty]] = patients.map(e => Edge(-e.person_id.toLong, -10*((year - e.year_of_birth) / 10), PatientAgeEdgeProperty(Enumerations.BELONGS)))
     val agepatEdges: RDD[Edge[EdgeProperty]] = patients.map(e => Edge(-10*((year - e.year_of_birth) / 10), -e.person_id.toLong, PatientAgeEdgeProperty(Enumerations.BELONGS)))
-    //println("Age Edges")
 
-    val loincVertices: RDD[(VertexId, VertexProperty)] = loinc.map(a=>(a.concept_id.toLong, ObservationProperty(a.concept_id)))
-    //println("Loinc")
+    val loincVertices: RDD[(VertexId, VertexProperty)] = loinc.map(a=>(a.concept_id.toLong, ObservationProperty(a.concept_id, a.concept_name)))
+    
     val loincRelationEdges: RDD[Edge[EdgeProperty]] = loinc_relations.map(a=>Edge(a.source.toLong, a.dest.toLong, ConceptRelationEdgeProperty(a.relation)))
 
-    val snomedVertices: RDD[(VertexId, VertexProperty)] = snomed.map(a=>(a.concept_id.toLong, DiagnosticProperty(a.concept_id)))
-    //println("Snomed")
+    val snomedVertices: RDD[(VertexId, VertexProperty)] = snomed.map(a=>(a.concept_id.toLong, DiagnosticProperty(a.concept_id, a.concept_name)))
     val snomedEdges: RDD[Edge[EdgeProperty]] = snomed_ancestors.map(a=>Edge(a.descendent_concept_id.toLong, a.ancestor_concept_id.toLong, ConceptAncestorEdgeProperty(Enumerations.ISA)))
     val snomedDescendantEdges: RDD[Edge[EdgeProperty]] = snomed_ancestors.map(a=>Edge(a.ancestor_concept_id.toLong, a.descendent_concept_id.toLong, ConceptAncestorEdgeProperty(Enumerations.CHILD)))
-    //println("Snomed Ancestors")
     val snomedRelationEdges: RDD[Edge[EdgeProperty]] = snomed_relations.map(a=>Edge(a.source.toLong, a.dest.toLong, ConceptRelationEdgeProperty(a.relation)))
 
-    val rxnormVertices: RDD[(VertexId, VertexProperty)] = rxnorm.map(a=>(a.concept_id.toLong, MedicationProperty(a.concept_id)))
-    //println("RxNorm")
+    val rxnormVertices: RDD[(VertexId, VertexProperty)] = rxnorm.map(a=>(a.concept_id.toLong, MedicationProperty(a.concept_id, a.concept_name)))
     val rxnormEdges: RDD[Edge[EdgeProperty]] = rxnorm_ancestors.map(a=>Edge(a.descendent_concept_id.toLong, a.ancestor_concept_id.toLong, ConceptAncestorEdgeProperty(Enumerations.ISA)))
     val rxnormDescendantEdges: RDD[Edge[EdgeProperty]] = rxnorm_ancestors.map(a=>Edge(a.ancestor_concept_id.toLong, a.descendent_concept_id.toLong, ConceptAncestorEdgeProperty(Enumerations.CHILD)))
-    //println("RxNorm Ancestors")
     val rxnormRelationEdges: RDD[Edge[EdgeProperty]] = rxnorm_relations.map(a=>Edge(a.source.toLong, a.dest.toLong, ConceptRelationEdgeProperty(a.relation)))
 
     val patlabEdges: RDD[Edge[EdgeProperty]] = labResults.map(x => Edge((-x.person_id).toLong, x.observation_concept_id.toLong,  PatientObservationProperty(x))) 
     val labpatEdges: RDD[Edge[EdgeProperty]] = labResults.map(x => Edge(x.observation_concept_id.toLong, (-x.person_id).toLong, PatientObservationProperty(x))) 
-    //println("Lab Edges")
 
     val patdiagEdges: RDD[Edge[EdgeProperty]] = diagnostics.map(x => Edge((-x.person_id).toLong, x.condition_concept_id.toLong,  PatientDiagnosticEdgeProperty(x)))
     val diagpatEdges: RDD[Edge[EdgeProperty]] = diagnostics.map(x => Edge(x.condition_concept_id.toLong, (-x.person_id).toLong, PatientDiagnosticEdgeProperty(x)))
-    //println("Diagnosis Edges")
 
     val medicationEdges:RDD[Edge[EdgeProperty]] = medications.map(e => Edge(-e.person_id.toLong, e.drug_concept_id.toLong, PatientMedicationEdgeProperty(e)))
     val revMedicationEdges:RDD[Edge[EdgeProperty]] = medications.map(e => Edge(e.drug_concept_id.toLong, -e.person_id.toLong, PatientMedicationEdgeProperty(e)))
-    //println("Medication Edges")
     
     val vertices = raceVertices.union(patientVertices).union(genderVertices).union(ageVertices).union(loincVertices).union(rxnormVertices).union(snomedVertices)
-    //println("Vertices Done", vertices.count)
     val edges1 = raceEdges.union(racepatEdges).union(patraceEdges).union(raceDescendantEdges).union(genpatEdges).union(patgenEdges).union(patageEdges).union(agepatEdges)
-    //println("Edges 1 Done")
     val edges = edges1.union(rxnormRelationEdges).union(loincRelationEdges).union(snomedRelationEdges).union(raceRelationEdges).union(patdiagEdges).union(diagpatEdges).union(snomedEdges).union(snomedDescendantEdges).union(patlabEdges).union(labpatEdges).union(medicationEdges).union(rxnormEdges).union(rxnormDescendantEdges).union(revMedicationEdges)
-    //println("Edges Done", edges.count)
 
     /*val graph: Graph[VertexProperty, EdgeProperty] = Graph(vertices, edges)
     println("all vertices 1 : ", graph.vertices.count)
     println("all edges 1: ", graph.edges.count)*/
+    val graph: Graph[VertexProperty, EdgeProperty] = Graph(vertices, edges)
     
     val endTime = System.currentTimeMillis();
     LOG.info("Edges/vertices created in " + (endTime - startTime) + "ms")
 
     //graph
     (vertices, edges)
-  }
-  
-  def runPageRank(graph:  Graph[VertexProperty, EdgeProperty] ): List[(Long, Double)] =
-  {
-    
-    val prGraph = graph.staticPageRank(10, 0.15).cache
-    
-    val  top = prGraph.vertices.top(5) {
-        Ordering.by((entry: (VertexId, Double)) => entry._2)
-    }
-
-    val p  = top.map(t=> (t._1 , t._2)).toList
-    p
   }
 }

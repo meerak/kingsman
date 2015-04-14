@@ -1,0 +1,12 @@
+curl --data-binary @target/scala-2.10/cse8803_project_template-assembly-1.0.jar localhost:8090/jars/test
+
+curl -d '' localhost:8090/contexts/mycontext
+
+curl -d "" 'localhost:8090/jobs?appName=test&classPath=spark.jobserver.Main&context=mycontext'
+
+curl -d "input.string = -33155000001" 'localhost:8090/jobs?appName=test&classPath=spark.jobserver.SimilarityMin&context=mycontext'
+
+curl localhost:8090/jobs/b00b4107-7a06-4904-8a39-d0c9f7802df
+
+POST '/contexts/my-new-context?dependent-jar-uris=file:///some/path/of/my-foo-lib.jar'
+

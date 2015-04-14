@@ -44,11 +44,11 @@ psql -d vocab -f vocab.sql -U rhea
 
 cd ../
 mkdir code
-scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem -r src hadoop@ec2-54-68-123-95.us-west-2.compute.amazonaws.com:/home/hadoop/code
-scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem -r sbt hadoop@ec2-54-68-123-95.us-west-2.compute.amazonaws.com:/home/hadoop/code
-scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem build.sbt hadoop@ec2-54-68-123-95.us-west-2.compute.amazonaws.com:/home/hadoop/code
-scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem project/build.properties hadoop@ec2-54-68-123-95.us-west-2.compute.amazonaws.com:/home/hadoop/code/project
-scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem project/plugins.sbt hadoop@ec2-54-68-123-95.us-west-2.compute.amazonaws.com:/home/hadoop/code/project
+scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem -r src hadoop@ec2-54-149-157-190.us-west-2.compute.amazonaws.com:/home/hadoop/code
+scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem -r sbt hadoop@ec2-54-149-157-190.us-west-2.compute.amazonaws.com:/home/hadoop/code
+scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem build.sbt hadoop@ec2-54-149-157-190.us-west-2.compute.amazonaws.com:/home/hadoop/code
+scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem project/build.properties hadoop@ec2-54-149-157-190.us-west-2.compute.amazonaws.com:/home/hadoop/code/project
+scp -i /Users/rhea/rheahome/Spring2015/BDH8803/mykeypair.pem project/plugins.sbt hadoop@ec2-54-149-157-190.us-west-2.compute.amazonaws.com:/home/hadoop/code/project
 
 FOR EMR CLUSTER - POSTGRES:
 
@@ -75,9 +75,10 @@ change host in application.conf in resource to use master's ip address
 
 sudo service postgresql start -p 5432
 
-./spark-submit --class edu.gatech.cse8803.main.Main --master yarn-client --driver-memory 5G --executor-memory 2G --jars /home/hadoop/code/postgresql-9.3-1103.jdbc41.jar /home/hadoop/code/target/scala-2.10/cse8803_project_template-assembly-1.0.jar
+./spark-submit --class edu.gatech.cse8803.main.Main --master yarn-client --driver-memory 10G --executor-memory 10G --jars /home/hadoop/code/postgresql-9.3-1103.jdbc41.jar /home/hadoop/code/target/scala-2.10/cse8803_project_template-assembly-1.0.jar
 
 
+./spark-submit --class edu.gatech.cse8803.main.Main --master yarn-client --driver-memory 10G  --executor-cores 2 --num-executors 4 --jars /home/hadoop/code/postgresql-9.3-1103.jdbc41.jar /home/hadoop/code/target/scala-2.10/cse8803_project_template-assembly-1.0.jar > op6.txt
 
 ********extra******
 mkdir temp_loc
