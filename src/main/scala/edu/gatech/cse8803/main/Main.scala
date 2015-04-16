@@ -20,6 +20,8 @@ import scala.io.Source
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import scala.util.Try
+import scala.collection.mutable.MutableList
+import java.util.Calendar
 
 object Main extends SparkJob with NamedRddSupport {
 
@@ -431,7 +433,7 @@ object Main extends SparkJob with NamedRddSupport {
         //val edges:RDD[Edge[EdgeProperty]]  = graph.edges
         namedRdds.getOrElseCreate("vertices", v)
         namedRdds.getOrElseCreate("edges", e)
-        
+        println("Built graph")
         //namedRdds.getNames.foreach(println)
         null
     }
@@ -440,7 +442,7 @@ object Main extends SparkJob with NamedRddSupport {
     }
 }
 
-object SimilarityMin extends SparkJob with NamedRddSupport {
+object SimilarityCosine extends SparkJob with NamedRddSupport {
 
    /* def main(args: Array[String]) {
         val sc = createContext
@@ -461,13 +463,162 @@ object SimilarityMin extends SparkJob with NamedRddSupport {
         LOG.info("Graph created in " + (endTime - startTime) +" ms")
         
         startTime = System.currentTimeMillis();
-        LOG.info("Started Minimum similarity")
-        val answerTop10patients = MinSimilarity.MinSimilarityOneVsAll(graph, patientIDtoLookup, null)
+        LOG.info("Started Cosine similarity")
+        //val answerTop10patients = MinSimilarity.MinSimilarityOneVsAll(graph, patientIDtoLookup, null)
+        val k = 100;
+        val answerToppatients = CosineSimilarity.cosineSimilarityOneVsAll(graph, patientIDtoLookup, null, k)
         endTime = System.currentTimeMillis();
-        println(s"Minimum similarity calculated in " + (endTime - startTime) +"ms")   
+        println(s"Cosine similarity calculated in " + (endTime - startTime) +"ms")   
 
-        answerTop10patients//.foreach(println)
+        answerToppatients//.foreach(println)
        // null
+    }
+    override def validate(sc:SparkContext, config: Config): SparkJobValidation = {
+        Try(config.getString("input.string"))
+            .map(x=>SparkJobValid)
+            .getOrElse(SparkJobInvalid("No input string"))
+    }
+
+     def createContext(appName: String, masterUrl: String): SparkContext = 
+    {
+        //val conf = new SparkConf().setAppName(appName)
+         val conf = new SparkConf().setAppName(appName)
+         //.set("spark.driver.memory", "10g").set("spark.executor.memory", "10g")
+         //setMaster(masterUrl).
+        new SparkContext(conf)
+    }
+
+    def createContext(appName: String): SparkContext = createContext(appName, "local")
+
+    def createContext: SparkContext = createContext("CSE 8803 Homework Three Application", "local")
+    
+}
+
+object PatientDetails extends SparkJob with NamedRddSupport {
+
+   /* def main(args: Array[String]) {
+        val sc = createContext
+        runJob(sc, ConfigFactory.parseString(""))
+    }*/
+
+    override def runJob(sc:SparkContext, config: Config): Any = {
+        
+       val LOG = LoggerFactory.getLogger(getClass())
+        
+        val sqlContext = new SQLContext(sc)
+        
+        val patientIDtoLookup =  config.getString("input.string")
+        
+        val conf = ConfigFactory.load()
+
+        val dbname = conf.getString("db-setting.database")
+        
+        val connection = Datasource.connectServer(conf, dbname)
+        
+        val stmt = connection.getConnection.createStatement()
+        
+        val dbname_vocab = conf.getString("db-setting.database_vocab")
+        
+        val connection_vocab = Datasource.connectServer(conf, dbname_vocab)
+        
+        val stmt_vocab = connection_vocab.getConnection.createStatement()
+        
+        var url_vocab = ""
+
+        var url  = "select * from person where person_id = " + patientIDtoLookup + ";"
+
+        var rs = stmt.executeQuery(url)
+
+        rs.next()
+
+        val person_id = rs.getLong("person_id")
+        
+        
+        url_vocab = "select concept_name from concept where concept_id = " + rs.getInt("gender_concept_id") + ";"
+        
+        val gs = stmt_vocab.executeQuery(url_vocab)
+            
+        gs.next()
+            
+        val gender_id = (gs.getString("concept_name")) 
+
+        
+        url_vocab = "select concept_name from concept where concept_id = " + rs.getInt("race_concept_id") + ";"
+        
+        val vs = stmt_vocab.executeQuery(url_vocab)
+            
+        vs.next()
+            
+        val race_id = (vs.getString("concept_name")) 
+        
+        
+        val year = Calendar.getInstance().get(Calendar.YEAR)
+        
+        val age = year - rs.getInt("year_of_birth")
+        
+        
+        url = "select distinct(condition_concept_id) from condition_occurrence where person_id = " + patientIDtoLookup + ";"
+        
+        val as = stmt.executeQuery(url)
+        
+        val diag: MutableList[String] = MutableList()
+        
+        while (as.next()) 
+        {
+            url_vocab = "select concept_name from concept where concept_id = " + as.getInt("condition_concept_id").toString + ";"
+            
+            val ds = stmt_vocab.executeQuery(url_vocab)
+            
+            ds.next()
+            
+            diag ++= MutableList(ds.getString("concept_name"))          
+        }
+        
+        
+        url = "select distinct(drug_concept_id) from drug_exposure where person_id = " + patientIDtoLookup + ";"
+        
+        val ms = stmt.executeQuery(url)
+        
+        val med: MutableList[String] = MutableList()
+        
+        while (ms.next()) 
+        {
+            url_vocab = "select concept_name from concept where concept_id = " + ms.getInt("drug_concept_id").toString + ";"
+            
+            val ds = stmt_vocab.executeQuery(url_vocab)
+            
+            ds.next()
+            
+            med ++= MutableList(ds.getString("concept_name"))          
+        }
+        
+        
+        url = "select distinct(observation_concept_id) from observation where person_id = " + patientIDtoLookup + ";"
+        
+        val ls = stmt.executeQuery(url)
+        
+        val lab: MutableList[String] = MutableList()
+        
+        while (ls.next()) 
+        {
+            url_vocab = "select concept_name from concept where concept_id = " + ls.getInt("observation_concept_id").toString + ";"
+            
+            val ds = stmt_vocab.executeQuery(url_vocab)
+            
+            ds.next()
+            
+            lab ++= MutableList(ds.getString("concept_name"))          
+        }
+       
+
+        var person =  Map("person_id" -> person_id.toString , "gender" -> gender_id.toString, "race" -> race_id.toString, "age" -> age.toString, "diagnostics" -> diag, "medications" -> med, "labresults" -> lab)
+       
+        connection.close()
+        
+        connection_vocab.close()
+        
+        scala.util.parsing.json.JSONObject(person)
+        
     }
     override def validate(sc:SparkContext, config: Config): SparkJobValidation = {
         Try(config.getString("input.string"))

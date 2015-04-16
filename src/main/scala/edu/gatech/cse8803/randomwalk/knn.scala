@@ -13,7 +13,7 @@ object KNN
 
     if(metric == "Cosine")
     {
-      top10 = CosineSimilarity.cosineSimilarityOneVsAll(graph, patientIDtoLookup, casecontrol)
+      top10 = CosineSimilarity.cosineSimilarityOneVsAll(graph, patientIDtoLookup, casecontrol, 10)
     }
     else if(metric == "Jaccard")
     {

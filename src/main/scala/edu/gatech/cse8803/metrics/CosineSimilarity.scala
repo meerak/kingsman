@@ -9,7 +9,7 @@ import org.apache.spark.rdd.RDD
 
 object CosineSimilarity 
 {
-  def cosineSimilarityOneVsAll(graph: Graph[VertexProperty, EdgeProperty], patientID: String, casecontrol: List[String]): List[String] = 
+  def cosineSimilarityOneVsAll(graph: Graph[VertexProperty, EdgeProperty], patientID: String, casecontrol: List[String], k:Integer): List[String] = 
   {
         val bcSrcVertexId = graph.edges.sparkContext.broadcast(patientID.toLong)
 
@@ -36,7 +36,7 @@ object CosineSimilarity
         }
         .filter(_._2 > 0.0)
         .filter(x => x._1 != bcSrcVertexId.value)
-        .takeOrdered(10)(scala.Ordering.by(-_._2))
+        .takeOrdered(k)(scala.Ordering.by(-_._2))
         .map(x => (-1 * x._1).toString())
         .toList
   }
