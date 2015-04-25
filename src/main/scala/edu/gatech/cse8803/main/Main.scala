@@ -103,6 +103,14 @@ object Main {
         testKNN(graph)
         endTime = System.currentTimeMillis();
         println(s"K - Nearest Neighbor completed in ${endTime - startTime} ms") 
+
+        /*
+        startTime = System.currentTimeMillis();
+        LOG.info("KNN AUC")
+        testKNN_AUC(graph)
+        endTime = System.currentTimeMillis();
+        println(s"AUC completed in ${endTime - startTime} ms")
+        */
     }
 
     def testMinimum(graphInput:  Graph[VertexProperty, EdgeProperty]) = 
