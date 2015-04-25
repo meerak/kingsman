@@ -50,7 +50,7 @@ To run in yarn-client:
 
 More details on the arguments can be found on the official Spark site: http://spark.apache.org/docs/1.2.0/
 
-To run KNN:
+#####To run KNN:
 To compute the AUC for mortality prediction
 
 Call testKNN_AUC function with the graph as its input. 'casecontrol.txt' holds all the patient ID's contained in the cohort. The function will read from this text file and create a list: knnvertices. For every vertex inside this list, its mortality probability is computed using the knnOneVsAll function. The similairty metric of choice can be passed as input here. This function will return output in the format '(actual death label, predicted value of death label)' for every patient in the cohort.
