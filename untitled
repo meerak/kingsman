@@ -38,5 +38,6 @@ To run in yarn-client:
 
 More details on the arguments can be found on the official Spark site: http://spark.apache.org/docs/1.2.0/
 
-Deploy:
+Deploy: 
 To deploy on EMR, please refer to the instructions in docs/EMRInstructions.txt
+

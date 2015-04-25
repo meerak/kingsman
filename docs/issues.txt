@@ -1,9 +1,0 @@
-SNOMED
-Support IS-A relation as well as attribute relations.
-Attributes for synonymns not available
-Ancestor table contains records where node belongs to SNOMED, but the descendant does not belong to SNOMED. How to handle this?
-Nodes self reference. Should this be considered?
-
-
-Data
-Dealing with missing values while creating nodes

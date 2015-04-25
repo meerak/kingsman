@@ -1,4 +1,0 @@
-1. Run entire program on cluster: cosine first
-2. Paper results - time on cluster, local machine, increased instance numbers, analysis -> vocab etc. 
-3. Prediction, graphs
-4. UI 
