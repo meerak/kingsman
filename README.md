@@ -3,7 +3,9 @@ BDH 8803: Project - Patient Similarity Using GraphX
 Dependencies: 
 The data( vocabularies, exact) in OMOP-CDM format needs to be downloaded into the data folder. 
 Since these files are quite large, we will not be including it in the zip file.
+
 Exact - https://drive.google.com/file/d/0BxcFMDUYO1ItMnZDelMtaTVSVTQ/view?usp=sharing
+
 Vocabularies  - https://drive.google.com/file/d/0BxcFMDUYO1ItY1JTdWZWM0JpQTg/view?usp=sharing
 
 PostgreSQL driver - Can be found in dependency folder
