@@ -65,18 +65,24 @@ and specify the location as
 s3://support.elasticmapreduce/spark/install-spark
 
 2. Once the cluster is ready, SSH into the master node:
-ssh -i <keypair location> hadoop@<master-dns-address>
-Create two folders in the master  - data and code 
-mkdir data
-mkdir code
+  ```bash
+  ssh -i <keypair location> hadoop@<master-dns-address>
+  #Create two folders in the master  - data and code 
+  mkdir data
+  mkdir code
+  ```
 
 3. Add a user to master node
-sudo useradd rhea
-sudo passwd rhea
+  ```bash
+  sudo useradd <username>
+  sudo passwd <username>
+  ```
 
 4. Install PostgreSQL on master node
-sudo yum install postgresql postgresql-server
-sudo service postgresql initdb
+  ```bash
+  sudo yum install postgresql postgresql-server
+  sudo service postgresql initdb
+  ```
 
 5. Configure PostgreSQL on master node
   1. Change authentication models for local to trust.
@@ -111,20 +117,20 @@ sudo service postgresql start -p 5432
   createdb exact
   psql -d vocab
   
-  vocab=# CREATE USER rhea with password 'abcde';
+  vocab=# CREATE USER <username> with password 'abcde';
   CREATE ROLE
-  vocab=# GRANT ALL PRIVILEGES ON DATABASE vocab to rhea;
+  vocab=# GRANT ALL PRIVILEGES ON DATABASE vocab to <username>;
   GRANT
   \q
   
   psql -d exact
-  GRANT ALL PRIVILEGES ON DATABASE exact to rhea;
+  GRANT ALL PRIVILEGES ON DATABASE exact to <username>;
   \q 
   
   exit
   
-  psql -d exact -f data/exactnew.sql -U rhea
-  psql -d vocab -f data/vocab.sql -U rhea
+  psql -d exact -f data/exactnew.sql -U <username>
+  psql -d vocab -f data/vocab.sql -U <username>
   ```
 9. Transfer source code from local machine to remote master node
  ```bash
@@ -136,10 +142,11 @@ sudo service postgresql start -p 5432
   scp -i <keypair> dependency/postgresql-9.3-1103.jdbc41.jar hadoop@<master-dns-address>:/home/hadoop/code
   ```
   
-10. Change host in application.conf in resource to use master's ip address
+10. Change application.conf in resources 
  ```bash
  vim src/main/resources/application.conf
   #Change host from localhost, to ip-address of master node 
+  #Change username and password depending on settings in postgres
   ```
   
 11. Create the uber jar
@@ -151,4 +158,3 @@ sudo service postgresql start -p 5432
  ```bash
   ./spark-submit --class edu.gatech.cse8803.main.Main --master yarn-client --driver-memory 10G --executor-memory 10G --executor-cores 2 --num-executors 4 --jars /home/hadoop/code/postgresql-9.3-1103.jdbc41.jar /home/hadoop/code/target/scala-2.10/cse8803_project_template-assembly-1.0.jar
   ```
-
